@@ -17,6 +17,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.jetsetterss.mobile',
+      googleServicesFile: process.env.GOOGLE_SERVICES_INFOPLIST,
     },
     android: {
       adaptiveIcon: {
@@ -34,14 +35,20 @@ module.exports = {
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
     },
     web: {
       favicon: './assets/favicon.png',
     },
+    plugins: [
+      '@react-native-google-signin/google-signin',
+    ],
     extra: {
       eas: {
         projectId: 'ef6b16d3-6cf1-4174-9e38-73fda97b94a9',
       },
+      // Google Sign-In Configuration
+      GOOGLE_WEB_CLIENT_ID: process.env.FIREBASE_WEB_CLIENT_ID,
       // ARC Pay Configuration
       ARC_PAY_MERCHANT_ID: process.env.ARC_PAY_MERCHANT_ID,
       ARC_PAY_API_URL: process.env.ARC_PAY_API_URL,

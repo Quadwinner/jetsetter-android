@@ -95,30 +95,45 @@ class AuthService {
     try {
       // Check if Google Sign-In is available
       if (!GoogleSignin) {
+        console.log('⚠️ Google Sign-In module not available');
         return {
           success: false,
-          error: 'Google Sign-In is not available. Please use email/password login or build the app with expo-dev-client for native module support.'
+          error: 'Google Sign-In requires a development build.\n\nTo enable Google Sign-In:\n1. Build the app with: npx expo run:android (or run:ios)\n2. Or create a development build with EAS\n\nFor now, please use email/password login.'
         };
       }
 
       // Check if running on web platform
       if (Platform.OS === 'web') {
+        console.log('⚠️ Google Sign-In not supported on web');
         return {
           success: false,
-          error: 'Google Sign-In is only available on Android and iOS devices. Please test on a physical device or Android emulator.'
+          error: 'Google Sign-In is only available on mobile devices.\n\nPlease use email/password login on web, or test on a mobile device.'
         };
       }
 
-      // Check if device supports Google Play Services
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      console.log('🔐 Initiating Google Sign-In...');
+
+      // Check if device supports Google Play Services (Android only)
+      if (Platform.OS === 'android') {
+        console.log('📱 Checking Google Play Services...');
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      }
 
       // Get user info from Google
-      const { idToken } = await GoogleSignin.signIn();
+      console.log('👤 Opening Google Sign-In prompt...');
+      const userInfo = await GoogleSignin.signIn();
+      console.log('✅ Google Sign-In successful, user:', userInfo.user?.email);
+
+      if (!userInfo.data?.idToken) {
+        throw new Error('No ID token received from Google');
+      }
 
       // Create Firebase credential
-      const googleCredential = GoogleAuthProvider.credential(idToken);
+      console.log('🔑 Creating Firebase credential...');
+      const googleCredential = GoogleAuthProvider.credential(userInfo.data.idToken);
 
       // Sign in with Firebase
+      console.log('🔥 Signing in with Firebase...');
       const userCredential = await signInWithCredential(auth, googleCredential);
       const user = userCredential.user;
 
@@ -134,12 +149,36 @@ class AuthService {
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('isAuthenticated', 'true');
 
+      console.log('✅ Google Sign-In complete!');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      console.error('❌ Google sign-in error:', error);
+
+      // Handle specific error codes
+      if (error.code === 'SIGN_IN_CANCELLED' || error.code === '-5') {
+        return {
+          success: false,
+          error: 'Google Sign-In was cancelled. Please try again.'
+        };
+      }
+
+      if (error.code === 'IN_PROGRESS') {
+        return {
+          success: false,
+          error: 'Google Sign-In is already in progress. Please wait.'
+        };
+      }
+
+      if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
+        return {
+          success: false,
+          error: 'Google Play Services is not available on this device. Please update Google Play Services or use email/password login.'
+        };
+      }
+
       return {
         success: false,
-        error: error.message || 'Google sign-in failed. Please try again.'
+        error: error.message || 'Google sign-in failed. Please try again or use email/password login.'
       };
     }
   }
