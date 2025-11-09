@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -133,14 +134,19 @@ const CruiseSearchScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      nestedScrollEnabled={true}
-      removeClippedSubviews={false}
-      keyboardDismissMode="none"
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
+        removeClippedSubviews={false}
+        keyboardDismissMode="on-drag"
+      >
       {/* Hero Section */}
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200' }}
@@ -184,7 +190,7 @@ const CruiseSearchScreen = ({ navigation }) => {
                   style={styles.popularTag}
                   onPress={() => selectPopularDestination(dest)}
                 >
-                  <Text style={styles.popularTagText}>{dest}</Text>
+                  <Text style={styles.popularTagText} numberOfLines={1}>{dest}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -214,7 +220,7 @@ const CruiseSearchScreen = ({ navigation }) => {
                   style={styles.popularTag}
                   onPress={() => selectDeparturePort(port)}
                 >
-                  <Text style={styles.popularTagText}>{port}</Text>
+                  <Text style={styles.popularTagText} numberOfLines={1}>{port}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -244,7 +250,7 @@ const CruiseSearchScreen = ({ navigation }) => {
                   style={styles.popularTag}
                   onPress={() => selectCruiseLine(line)}
                 >
-                  <Text style={styles.popularTagText}>{line}</Text>
+                  <Text style={styles.popularTagText} numberOfLines={1}>{line}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -437,7 +443,8 @@ const CruiseSearchScreen = ({ navigation }) => {
           ))}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
