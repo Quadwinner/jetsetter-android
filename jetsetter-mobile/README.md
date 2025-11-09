@@ -4,7 +4,7 @@ A React Native mobile application for the Jetsetters travel booking platform, bu
 
 ## 📱 Features
 
-- **Authentication**: Firebase Auth with Google OAuth support
+- **Authentication**: Firebase Auth with Email/Password & Google OAuth support
 - **Flight Booking**: Search and book flights using Amadeus API
 - **Hotel Booking**: Find and book hotels worldwide
 - **Cruise Booking**: Luxury cruise packages and itineraries
@@ -12,6 +12,14 @@ A React Native mobile application for the Jetsetters travel booking platform, bu
 - **Car Rentals**: Vehicle rental booking
 - **My Trips**: Manage all bookings in one place
 - **Payment Integration**: ARC Pay gateway integration
+
+### 🔐 Authentication Status
+
+- ✅ **Email/Password Login**: Fully functional (works everywhere)
+- 🔧 **Google Sign-In**: Configured, requires additional setup
+  - See [GOOGLE_SIGNIN_SETUP.md](./GOOGLE_SIGNIN_SETUP.md) for complete instructions
+  - Requires Firebase service files (`google-services.json` for Android, `GoogleService-Info.plist` for iOS)
+  - Requires a development build (not supported in Expo Go)
 
 ## 🛠 Tech Stack
 
@@ -138,11 +146,16 @@ src/
 | `FIREBASE_API_KEY` | Firebase API key | Yes |
 | `FIREBASE_AUTH_DOMAIN` | Firebase auth domain | Yes |
 | `FIREBASE_PROJECT_ID` | Firebase project ID | Yes |
+| `FIREBASE_WEB_CLIENT_ID` | Firebase Web Client ID (for Google Sign-In) | Yes |
+| `GOOGLE_SERVICES_JSON` | Path to google-services.json | For Google Sign-In |
+| `GOOGLE_SERVICES_INFOPLIST` | Path to GoogleService-Info.plist | For Google Sign-In |
 | `AMADEUS_API_KEY` | Amadeus API key | Yes |
 | `AMADEUS_API_SECRET` | Amadeus API secret | Yes |
 | `ARC_PAY_MERCHANT_ID` | ARC Pay merchant ID | Yes |
 | `ARC_PAY_API_URL` | ARC Pay API URL | Yes |
 | `API_BASE_URL` | Backend API base URL | Yes |
+
+> **Note**: For Google Sign-In setup, see [GOOGLE_SIGNIN_SETUP.md](./GOOGLE_SIGNIN_SETUP.md)
 
 ## 📱 Platform Support
 
