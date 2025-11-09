@@ -456,6 +456,7 @@ const MyTripsScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowLoginPopup(false)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons name="close" size={24} color="#6b7280" />
             </TouchableOpacity>

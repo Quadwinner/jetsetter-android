@@ -140,6 +140,7 @@ const LoginScreen = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}

@@ -198,7 +198,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileImageContainer}>
           <Ionicons name="person" size={60} style={styles.profileIcon} />
         </View>
-        <Text style={styles.userName}>Guest User</Text>
+        <Text style={styles.userName} numberOfLines={1}>Guest User</Text>
         <View style={styles.guestBadge}>
           <Text style={styles.guestBadgeText}>Not Logged In</Text>
         </View>
@@ -246,7 +246,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileImageContainer}>
           <Ionicons name="person" size={60} style={styles.profileIcon} />
         </View>
-        <Text style={styles.userName}>
+        <Text style={styles.userName} numberOfLines={1}>
           {profileData.firstName} {profileData.lastName}
         </Text>
         <Text style={styles.userEmail}>{profileData.email}</Text>
