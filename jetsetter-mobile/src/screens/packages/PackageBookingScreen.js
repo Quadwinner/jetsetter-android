@@ -159,7 +159,7 @@ const PackageBookingScreen = ({ route, navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#FFF', paddingTop: 48 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#FFF', paddingTop: insets.top + 12 }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
           <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>

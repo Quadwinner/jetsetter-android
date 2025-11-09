@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -169,7 +170,17 @@ const FlightSearchScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
       {/* Hero Section */}
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200' }}
@@ -238,8 +249,8 @@ const FlightSearchScreen = ({ navigation }) => {
                   style={styles.suggestionItem}
                   onPress={() => selectFromAirport(airport)}
                 >
-                  <Text style={styles.suggestionCity}>{airport.city}</Text>
-                  <Text style={styles.suggestionCode}>
+                  <Text style={styles.suggestionCity} numberOfLines={1}>{airport.city}</Text>
+                  <Text style={styles.suggestionCode} numberOfLines={1}>
                     {airport.code} - {airport.country}
                   </Text>
                 </TouchableOpacity>
@@ -269,8 +280,8 @@ const FlightSearchScreen = ({ navigation }) => {
                   style={styles.suggestionItem}
                   onPress={() => selectToAirport(airport)}
                 >
-                  <Text style={styles.suggestionCity}>{airport.city}</Text>
-                  <Text style={styles.suggestionCode}>
+                  <Text style={styles.suggestionCity} numberOfLines={1}>{airport.city}</Text>
+                  <Text style={styles.suggestionCode} numberOfLines={1}>
                     {airport.code} - {airport.country}
                   </Text>
                 </TouchableOpacity>
@@ -432,7 +443,8 @@ const FlightSearchScreen = ({ navigation }) => {
           ))}
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

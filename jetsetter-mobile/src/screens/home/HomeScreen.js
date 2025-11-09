@@ -11,7 +11,9 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -45,9 +47,9 @@ const HeroSection = ({
       style={styles.heroOverlay}
     >
       <View style={styles.heroContent}>
-        <Text style={styles.heroTitle}>Discover Your Perfect</Text>
-        <Text style={styles.heroTitleHighlight}>Cruise Adventure</Text>
-        <Text style={styles.heroSubtitle}>
+        <Text style={styles.heroTitle} numberOfLines={1}>Discover Your Perfect</Text>
+        <Text style={styles.heroTitleHighlight} numberOfLines={1}>Cruise Adventure</Text>
+        <Text style={styles.heroSubtitle} numberOfLines={2}>
           Explore breathtaking destinations with luxury cruise experiences
         </Text>
 
@@ -126,6 +128,7 @@ const HeroSection = ({
 );
 
 const HomeScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [searchDestination, setSearchDestination] = useState('');
   const [searchDate, setSearchDate] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -571,20 +574,25 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#1E293B' }}>Jetsetters</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
           <Ionicons name="person-circle" size={32} color="#0EA5E9" />
         </TouchableOpacity>
       </View>
-      <ScrollView 
-        style={styles.container} 
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled={true}
-        removeClippedSubviews={false}
-        keyboardDismissMode="none"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
+        <ScrollView
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
+          removeClippedSubviews={false}
+          keyboardDismissMode="on-drag"
+        >
         <HeroSection
           searchDestination={searchDestination}
           handleDestinationChange={handleDestinationChange}
@@ -608,7 +616,8 @@ const HomeScreen = ({ navigation }) => {
       <NewsletterSection />
       <TestimonialsModal />
       <ContactFormModal />
-    </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
