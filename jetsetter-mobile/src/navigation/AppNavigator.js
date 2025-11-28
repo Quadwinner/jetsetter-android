@@ -31,6 +31,11 @@ import PackageConfirmationScreen from '../screens/packages/PackageConfirmationSc
 import MyTripsScreen from '../screens/trips/MyTripsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
+// ARC Pay Payment Screens
+import ArcPaymentScreen from '../screens/payment/ArcPaymentScreen';
+import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
+import PaymentFailedScreen from '../screens/payment/PaymentFailedScreen';
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -118,6 +123,21 @@ const MainStack = () => (
     <Stack.Screen name="PackageDetails" component={PackageDetailsScreen} />
     <Stack.Screen name="PackageBooking" component={PackageBookingScreen} />
     <Stack.Screen name="PackageConfirmation" component={PackageConfirmationScreen} />
+    {/* ARC Pay Payment Screens */}
+    <Stack.Screen 
+      name="ArcPayment" 
+      component={ArcPaymentScreen} 
+      options={{ gestureEnabled: false }} 
+    />
+    <Stack.Screen 
+      name="PaymentSuccess" 
+      component={PaymentSuccessScreen} 
+      options={{ gestureEnabled: false }} 
+    />
+    <Stack.Screen 
+      name="PaymentFailed" 
+      component={PaymentFailedScreen} 
+    />
   </Stack.Navigator>
 );
 

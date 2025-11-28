@@ -28,6 +28,14 @@ export const AMADEUS_CONFIG = {
 export const ARC_PAY_CONFIG = {
   MERCHANT_ID: 'TESTARC05511704',
   API_URL: 'https://api.arcpay.travel/api/rest/version/100/merchant/TESTARC05511704',
+  // Backend URL for payment processing (same as web platform)
+  BACKEND_PAYMENT_URL: 'https://www.jetsetterss.com/api/payments',
+  // Alternative backend for development
+  DEV_PAYMENT_URL: 'https://prod-six-phi.vercel.app/api/payments',
+  // Payment page URL (for reference - backend provides this)
+  PAYMENT_PAGE_BASE: 'https://na.gateway.mastercard.com/checkout/pay',
+  // Test mode flag
+  TEST_MODE: true,
 };
 
 // App Configuration
