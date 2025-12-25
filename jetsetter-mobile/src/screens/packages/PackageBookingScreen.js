@@ -21,17 +21,6 @@ const PackageBookingScreen = ({ route, navigation }) => {
     cvv: '',
   });
 
-  // Fill test card details
-  const fillTestCard = () => {
-    setPaymentInfo({
-      cardNumber: '4012 0000 9876 5439',
-      cardHolder: 'Test User',
-      expiryDate: '12/25',
-      cvv: '999',
-    });
-    Alert.alert('Test Card Filled', 'Visa test card details have been filled for testing.');
-  };
-
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [travelDateObj, setTravelDateObj] = useState(new Date());
@@ -205,12 +194,6 @@ const PackageBookingScreen = ({ route, navigation }) => {
           {/* Payment Information */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B' }}>Payment Information</Text>
-            <TouchableOpacity 
-              style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
-              onPress={fillTestCard}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>🧪 Fill Test Card</Text>
-            </TouchableOpacity>
           </View>
           <View style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 }}>Card Number *</Text>

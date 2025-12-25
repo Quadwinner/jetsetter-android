@@ -8,6 +8,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import flightService from '../../services/flightService';
+import notificationService from '../../services/notificationService';
 import styles from './styles/FlightConfirmationScreen.styles';
 
 const FlightConfirmationScreen = ({ route, navigation }) => {
@@ -41,6 +42,8 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
 
         await AsyncStorage.setItem('completedFlightBooking', JSON.stringify(bookingToSave));
         console.log('✅ Flight booking saved to AsyncStorage');
+
+        await notificationService.sendBookingConfirmation('Flight', pnr || orderReference);
       } catch (error) {
         console.error('❌ Error saving flight booking:', error);
       }

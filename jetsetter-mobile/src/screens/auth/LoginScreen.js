@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
@@ -57,8 +58,11 @@ const LoginScreen = ({ navigation }) => {
 
       if (firebaseResult.success) {
         console.log('Firebase login successful');
-        dispatch(loginSuccess(firebaseResult.user));
-        Alert.alert('Success', 'Login successful!');
+        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
+        // This ensures the auth state is properly synced with Firebase
+        // The onAuthStateChange listener in App.js will update Redux state
+        console.log('Login successful - Firebase auth state will update automatically');
+        // No alert needed - navigation will happen automatically via onAuthStateChange
       } else {
         console.log('Login failed');
         dispatch(loginFailure(firebaseResult.error));
@@ -81,8 +85,9 @@ const LoginScreen = ({ navigation }) => {
       const result = await authService.signInWithGoogle();
 
       if (result.success) {
-        dispatch(loginSuccess(result.user));
-        Alert.alert('Success', 'Signed in with Google successfully!');
+        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
+        // The onAuthStateChange listener in App.js will update Redux state
+        console.log('Google Sign-In successful - Firebase auth state will update automatically');
       } else {
         dispatch(loginFailure(result.error));
         Alert.alert('Google Sign-In Failed', result.error);
@@ -102,6 +107,11 @@ const LoginScreen = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
+          <Image
+            source={require('../../../assets/jetset.jpeg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
@@ -171,17 +181,7 @@ const LoginScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.forgotPassword}
-            onPress={async () => {
-              if (!email.trim()) {
-                Alert.alert('Email Required', 'Please enter your email address');
-                return;
-              }
-              const result = await authService.resetPassword(email);
-              Alert.alert(
-                result.success ? 'Success' : 'Error',
-                result.success ? result.message : result.error
-              );
-            }}
+            onPress={() => navigation.navigate('ForgotPassword')}
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
@@ -211,6 +211,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,

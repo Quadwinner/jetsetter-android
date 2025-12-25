@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
@@ -77,10 +78,12 @@ const SignupScreen = ({ navigation }) => {
 
       if (firebaseResult.success) {
         console.log('Firebase signup successful');
-        dispatch(loginSuccess(firebaseResult.user));
+        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
+        // Show verification email message
         Alert.alert(
-          'Success',
-          'Account created successfully! Please check your email to verify your account.'
+          'Account Created',
+          'Please check your email to verify your account.',
+          [{ text: 'OK' }]
         );
       } else {
         console.log('Signup failed');
@@ -104,8 +107,8 @@ const SignupScreen = ({ navigation }) => {
       const result = await authService.signInWithGoogle();
 
       if (result.success) {
-        dispatch(loginSuccess(result.user));
-        Alert.alert('Success', 'Signed in with Google successfully!');
+        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
+        console.log('Google Sign-In successful - Firebase auth state will update automatically');
       } else {
         dispatch(loginFailure(result.error));
         Alert.alert('Google Sign-In Failed', result.error);
@@ -125,6 +128,11 @@ const SignupScreen = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
+          <Image
+            source={require('../../../assets/jetset.jpeg')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
         </View>
@@ -283,6 +291,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,

@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://prod-six-phi.vercel.app/api',
-  TIMEOUT: 10000,
+  BASE_URL: 'https://www.jetsetterss.com/api', // Production API URL
+  TIMEOUT: 30000,
 };
 
 // Supabase Configuration

@@ -1,41 +1,41 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Provider, useDispatch } from 'react-redux';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { StatusBar } from 'expo-status-bar';
 import { setUser } from './src/store/slices/authSlice';
 import authService from './src/services/authService';
+import notificationService from './src/services/notificationService';
+import SplashScreen from './src/screens/SplashScreen';
 
 function AppContent() {
   const dispatch = useDispatch();
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Check authentication state on app load
-    const checkAuthState = async () => {
-      try {
-        const isAuthenticated = await authService.isAuthenticated();
-        const user = await authService.getCurrentUser();
+    // Listen to auth state changes (single source of truth)
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      dispatch(setUser(user));
+      setInitializing(false);
+    });
 
-        if (isAuthenticated && user) {
-          dispatch(setUser(user));
-        } else {
-          dispatch(setUser(null));
-        }
+    // Initialize push notifications
+    const initNotifications = async () => {
+      try {
+        await notificationService.registerForPushNotifications();
       } catch (error) {
-        console.error('Auth state check error:', error);
-        dispatch(setUser(null));
+        console.error('Notification initialization error:', error);
       }
     };
 
-    checkAuthState();
-
-    // Listen to auth state changes
-    const unsubscribe = authService.onAuthStateChange((user) => {
-      dispatch(setUser(user));
-    });
+    initNotifications();
 
     return () => unsubscribe();
   }, [dispatch]);
+
+  if (initializing) {
+    return <SplashScreen />;
+  }
 
   return (
     <>

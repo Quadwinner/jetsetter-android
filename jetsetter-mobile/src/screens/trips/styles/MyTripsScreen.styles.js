@@ -51,6 +51,19 @@ export default StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
+  newRequestButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  newRequestButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
   guestBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -244,10 +257,59 @@ export default StyleSheet.create({
   statusCancelled: {
     backgroundColor: '#FEE2E2',
   },
+  statuspending: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusquoted: {
+    backgroundColor: '#DBEAFE',
+  },
+  statusbooked: {
+    backgroundColor: '#D1FAE5',
+  },
+  statuscancelled: {
+    backgroundColor: '#FEE2E2',
+  },
   statusText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#10B981',
+    textTransform: 'capitalize',
+  },
+  quotesSection: {
+    marginTop: 8,
+    marginBottom: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingHorizontal: 16,
+  },
+  quoteRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quoteText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+  },
+  payButton: {
+    backgroundColor: '#1e40af',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cardDate: {
+    fontSize: 12,
+    color: '#9ca3af',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
 
   // Card Body

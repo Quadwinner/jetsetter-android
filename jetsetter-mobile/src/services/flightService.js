@@ -185,6 +185,93 @@ class FlightService {
   }
 
   /**
+   * Modify a flight booking
+   * @param {string} bookingId - Booking ID or PNR
+   * @param {Object} modifications - Modifications to apply
+   * @param {Array} modifications.newTravelers - Updated traveler information (optional)
+   * @param {string} modifications.newContactEmail - Updated contact email (optional)
+   * @param {string} modifications.newContactPhone - Updated contact phone (optional)
+   * @returns {Promise<Object>} Modification result
+   */
+  async modifyBooking(bookingId, modifications) {
+    try {
+      console.log('Modifying flight booking:', bookingId);
+
+      if (USE_MOCK_DATA) {
+        console.log('Using MOCK modification (backend has issues)');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        return {
+          success: true,
+          bookingId,
+          message: 'Mock booking modified successfully',
+          modifications,
+        };
+      }
+
+      const { data } = await flightApi.put(`/flights/booking/${bookingId}`, modifications);
+
+      return {
+        success: true,
+        bookingId: data.bookingId,
+        booking: data.booking,
+        message: data.message || 'Booking modified successfully',
+      };
+    } catch (error) {
+      console.error('Modify booking error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to modify booking',
+        details: error.response?.data?.details || null,
+      };
+    }
+  }
+
+  /**
+   * Cancel a flight booking
+   * @param {string} bookingId - Booking ID or PNR
+   * @param {string} reason - Cancellation reason (optional)
+   * @returns {Promise<Object>} Cancellation result
+   */
+  async cancelBooking(bookingId, reason = 'Customer request') {
+    try {
+      console.log('Cancelling flight booking:', bookingId);
+
+      if (USE_MOCK_DATA) {
+        console.log('Using MOCK cancellation (backend has issues)');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        return {
+          success: true,
+          bookingId,
+          cancellationId: 'CANCEL-' + Date.now(),
+          refundAmount: null,
+          message: 'Mock booking cancelled successfully',
+        };
+      }
+
+      const { data } = await flightApi.delete(`/flights/booking/${bookingId}`, {
+        data: { reason },
+      });
+
+      return {
+        success: true,
+        bookingId: data.bookingId,
+        cancellationId: data.cancellationId,
+        refundAmount: data.refundAmount,
+        message: data.message || 'Booking cancelled successfully',
+      };
+    } catch (error) {
+      console.error('Cancel booking error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to cancel booking',
+        details: error.response?.data?.details || null,
+      };
+    }
+  }
+
+  /**
    * Extract IATA code from airport string like "New Delhi (DEL)"
    * @param {string} airportString - Airport string with code
    * @returns {string} IATA code

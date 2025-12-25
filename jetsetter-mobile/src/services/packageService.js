@@ -61,6 +61,34 @@ class PackageService {
     }
   }
 
+  async modifyBooking(bookingId, modifications) {
+    try {
+      console.log('Modifying package booking:', bookingId);
+      if (USE_MOCK_DATA) {
+        await new Promise(r => setTimeout(r, 1500));
+        return { success: true, bookingId, message: 'Mock booking modified successfully', modifications };
+      }
+      const { data } = await packageApi.put(`/packages/booking/${bookingId}`, modifications);
+      return { success: true, bookingId: data.bookingId, booking: data.booking, message: data.message || 'Booking modified successfully' };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to modify booking', details: error.response?.data?.details || null };
+    }
+  }
+
+  async cancelBooking(bookingId, reason = 'Customer request') {
+    try {
+      console.log('Cancelling package booking:', bookingId);
+      if (USE_MOCK_DATA) {
+        await new Promise(r => setTimeout(r, 1500));
+        return { success: true, bookingId, cancellationId: 'CANCEL-' + Date.now(), refundAmount: null, message: 'Mock booking cancelled successfully' };
+      }
+      const { data } = await packageApi.delete(`/packages/booking/${bookingId}`, { data: { reason } });
+      return { success: true, bookingId: data.bookingId, cancellationId: data.cancellationId, refundAmount: data.refundAmount, message: data.message || 'Booking cancelled successfully' };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Failed to cancel booking', details: error.response?.data?.details || null };
+    }
+  }
+
   formatPrice(amount, currency = 'USD') {
     const s = { USD: '$', EUR: '€', GBP: '£', INR: '₹' };
     return `${s[currency] || currency}${amount.toFixed(2)}`;

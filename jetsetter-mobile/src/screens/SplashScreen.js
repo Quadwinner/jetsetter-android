@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { COLORS } from '../constants/config';
 
 const SplashScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🚀 Jetsetters</Text>
+      <Image
+        source={require('../../assets/jetset.jpeg')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <Text style={styles.subtitle}>Your Luxury Travel Companion</Text>
       <ActivityIndicator size="large" color={COLORS.PRIMARY} style={styles.loader} />
     </View>
@@ -19,11 +23,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.LIGHT,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: COLORS.PRIMARY,
-    marginBottom: 8,
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
   subtitle: {
     fontSize: 16,

@@ -387,7 +387,8 @@ const processMockPayment = async (paymentData) => {
 
 const arcPayService = {
   createPaymentSession,
-  processPayment: processMockPayment, // Use mock for testing
+  // Use real ARC Pay processing instead of mock
+  processPayment,
   checkPaymentStatus,
   refundPayment,
   parseExpiryDate,

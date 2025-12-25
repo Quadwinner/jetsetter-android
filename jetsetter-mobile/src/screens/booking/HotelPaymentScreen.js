@@ -25,17 +25,6 @@ const HotelPaymentScreen = ({ route, navigation }) => {
     cvv: '',
   });
 
-  // Fill test card details
-  const fillTestCard = () => {
-    setPaymentInfo({
-      cardNumber: '4012 0000 9876 5439',
-      cardHolder: 'Test User',
-      expiryDate: '12/25',
-      cvv: '999',
-    });
-    Alert.alert('Test Card Filled', 'Visa test card details have been filled for testing.');
-  };
-
   const totalPrice = selectedOffer.price * nights;
 
   const validateForm = () => {
@@ -243,9 +232,6 @@ const HotelPaymentScreen = ({ route, navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Payment Information</Text>
-            <TouchableOpacity style={styles.testButton} onPress={fillTestCard}>
-              <Text style={styles.testButtonText}>🧪 Fill Test Card</Text>
-            </TouchableOpacity>
           </View>
           <View style={styles.form}>
             <Text style={styles.label}>Card Number *</Text>

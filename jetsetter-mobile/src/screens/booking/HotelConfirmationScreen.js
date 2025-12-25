@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import hotelService from '../../services/hotelService';
+import notificationService from '../../services/notificationService';
 import styles from './styles/HotelConfirmationScreen.styles';
 
 const HotelConfirmationScreen = ({ route, navigation }) => {
@@ -32,6 +33,11 @@ const HotelConfirmationScreen = ({ route, navigation }) => {
 
         await AsyncStorage.setItem('completedHotelBooking', JSON.stringify(bookingToSave));
         console.log('✅ Hotel booking saved to AsyncStorage');
+
+        await notificationService.sendBookingConfirmation(
+          'Hotel',
+          booking.bookingReference || orderReference
+        );
       } catch (error) {
         console.error('❌ Error saving hotel booking:', error);
       }

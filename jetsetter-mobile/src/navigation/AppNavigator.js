@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import notificationService from '../services/notificationService';
+import { COLORS } from '../constants/config';
 
 // Import screens
 import SplashScreen from '../screens/SplashScreen';
+import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 import FlightSearchScreen from '../screens/booking/FlightSearchScreen';
 import FlightResultsScreen from '../screens/booking/FlightResultsScreen';
@@ -29,7 +34,11 @@ import PackageDetailsScreen from '../screens/packages/PackageDetailsScreen';
 import PackageBookingScreen from '../screens/packages/PackageBookingScreen';
 import PackageConfirmationScreen from '../screens/packages/PackageConfirmationScreen';
 import MyTripsScreen from '../screens/trips/MyTripsScreen';
+import BookingDetailScreen from '../screens/trips/BookingDetailScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import NewRequestScreen from '../screens/requests/NewRequestScreen';
+import InquiryDetailScreen from '../screens/requests/InquiryDetailScreen';
+import BookingInfoFormScreen from '../screens/booking/BookingInfoFormScreen';
 
 // ARC Pay Payment Screens
 import ArcPaymentScreen from '../screens/payment/ArcPaymentScreen';
@@ -44,6 +53,7 @@ const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Signup" component={SignupScreen} />
+    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
   </Stack.Navigator>
 );
 
@@ -138,20 +148,82 @@ const MainStack = () => (
       name="PaymentFailed" 
       component={PaymentFailedScreen} 
     />
+    {/* Booking Management */}
+    <Stack.Screen 
+      name="BookingDetail" 
+      component={BookingDetailScreen} 
+    />
+    {/* Requests & Inquiries */}
+    <Stack.Screen 
+      name="NewRequest" 
+      component={NewRequestScreen} 
+    />
+    <Stack.Screen 
+      name="InquiryDetail" 
+      component={InquiryDetailScreen} 
+    />
+    <Stack.Screen 
+      name="BookingInfoForm" 
+      component={BookingInfoFormScreen}
+      options={{
+        title: 'Booking Information',
+        headerStyle: {
+          backgroundColor: COLORS.PRIMARY,
+        },
+        headerTintColor: '#fff',
+      }}
+    />
   </Stack.Navigator>
 );
 
 // Main App Navigator
 const AppNavigator = () => {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(null);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+  const navigationRef = React.useRef(null);
 
-  if (loading) {
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const value = await AsyncStorage.getItem('hasSeenOnboarding');
+        setHasSeenOnboarding(value === 'true');
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        setHasSeenOnboarding(false);
+      } finally {
+        setIsCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
+  useEffect(() => {
+    if (navigationRef.current && !isCheckingOnboarding) {
+      const navigation = navigationRef.current;
+      notificationService.setupNotificationListeners(navigation);
+    }
+  }, [isCheckingOnboarding]);
+
+  if (loading || isCheckingOnboarding) {
     return <SplashScreen />;
   }
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <MainStack /> : <AuthStack />}
+    <NavigationContainer ref={navigationRef}>
+      {!hasSeenOnboarding ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        </Stack.Navigator>
+      ) : isAuthenticated ? (
+        <MainStack />
+      ) : (
+        <AuthStack />
+      )}
     </NavigationContainer>
   );
 };

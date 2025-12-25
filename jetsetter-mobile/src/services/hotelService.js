@@ -199,6 +199,94 @@ class HotelService {
   }
 
   /**
+   * Modify a hotel booking
+   * @param {string} bookingId - Booking ID or reference
+   * @param {Object} modifications - Modifications to apply
+   * @param {string} modifications.newCheckInDate - Updated check-in date (optional)
+   * @param {string} modifications.newCheckOutDate - Updated check-out date (optional)
+   * @param {number} modifications.newGuestCount - Updated guest count (optional)
+   * @param {Object} modifications.newGuestDetails - Updated guest information (optional)
+   * @returns {Promise<Object>} Modification result
+   */
+  async modifyBooking(bookingId, modifications) {
+    try {
+      console.log('Modifying hotel booking:', bookingId);
+
+      if (USE_MOCK_DATA) {
+        console.log('Using MOCK modification (backend has issues)');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        return {
+          success: true,
+          bookingId,
+          message: 'Mock booking modified successfully',
+          modifications,
+        };
+      }
+
+      const { data } = await hotelApi.put(`/hotels/booking/${bookingId}`, modifications);
+
+      return {
+        success: true,
+        bookingId: data.bookingId,
+        booking: data.booking,
+        message: data.message || 'Booking modified successfully',
+      };
+    } catch (error) {
+      console.error('Modify booking error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to modify booking',
+        details: error.response?.data?.details || null,
+      };
+    }
+  }
+
+  /**
+   * Cancel a hotel booking
+   * @param {string} bookingId - Booking ID or reference
+   * @param {string} reason - Cancellation reason (optional)
+   * @returns {Promise<Object>} Cancellation result
+   */
+  async cancelBooking(bookingId, reason = 'Customer request') {
+    try {
+      console.log('Cancelling hotel booking:', bookingId);
+
+      if (USE_MOCK_DATA) {
+        console.log('Using MOCK cancellation (backend has issues)');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        return {
+          success: true,
+          bookingId,
+          cancellationId: 'CANCEL-' + Date.now(),
+          refundAmount: null,
+          message: 'Mock booking cancelled successfully',
+        };
+      }
+
+      const { data } = await hotelApi.delete(`/hotels/booking/${bookingId}`, {
+        data: { reason },
+      });
+
+      return {
+        success: true,
+        bookingId: data.bookingId,
+        cancellationId: data.cancellationId,
+        refundAmount: data.refundAmount,
+        message: data.message || 'Booking cancelled successfully',
+      };
+    } catch (error) {
+      console.error('Cancel booking error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to cancel booking',
+        details: error.response?.data?.details || null,
+      };
+    }
+  }
+
+  /**
    * Extract city code from destination string
    * @param {string} destination - Destination string
    * @returns {string} City code

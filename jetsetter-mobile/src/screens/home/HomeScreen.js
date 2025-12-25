@@ -576,9 +576,18 @@ const HomeScreen = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' }}>
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#1E293B' }}>Jetsetters</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person-circle" size={32} color="#0EA5E9" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('NewRequest')}
+            style={{ backgroundColor: '#0EA5E9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>Request</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <Ionicons name="person-circle" size={32} color="#0EA5E9" />
+          </TouchableOpacity>
+        </View>
       </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}

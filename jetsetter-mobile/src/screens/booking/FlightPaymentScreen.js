@@ -13,13 +13,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import flightService from '../../services/flightService';
-import arcPayService from '../../services/arcPayService';
+import quoteService from '../../services/quoteService';
+import useArcPayment from '../../utils/useArcPayment';
 import styles from './styles/FlightPaymentScreen.styles';
 
 const FlightPaymentScreen = ({ route, navigation }) => {
   const { selectedFlight, searchParams } = route.params;
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
+  const { payForFlight, isProcessing } = useArcPayment();
 
   // Initialize travelers array based on search params
   const initializeTravelers = () => {
@@ -45,17 +47,6 @@ const FlightPaymentScreen = ({ route, navigation }) => {
     expiryDate: '',
     cvv: '',
   });
-
-  // Fill test card details
-  const fillTestCard = () => {
-    setPaymentInfo({
-      cardNumber: '4012 0000 9876 5439',
-      cardHolder: 'Test User',
-      expiryDate: '12/25',
-      cvv: '999',
-    });
-    Alert.alert('Test Card Filled', 'Visa test card details have been filled for testing.');
-  };
 
   const updateTraveler = (index, field, value) => {
     const updatedTravelers = [...travelers];
@@ -99,12 +90,6 @@ const FlightPaymentScreen = ({ route, navigation }) => {
       return false;
     }
 
-    // Validate payment information
-    if (!paymentInfo.cardNumber || !paymentInfo.cardHolder || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-      Alert.alert('Missing Payment', 'Please complete all payment information');
-      return false;
-    }
-
     return true;
   };
 
@@ -116,60 +101,12 @@ const FlightPaymentScreen = ({ route, navigation }) => {
     try {
       const price = selectedFlight.price?.total || '0';
       const totalAmount = parseFloat(price);
-      const orderReference = `FLIGHT-${Date.now()}-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
+      const currency = selectedFlight.price?.currency || 'USD';
 
-      console.log('✈️ Starting flight booking process...');
-      console.log('Order Reference:', orderReference);
+      console.log('✈️ Starting flight booking via ARC Pay quote flow...');
       console.log('Total Amount:', totalAmount);
 
-      // Parse card expiry date
-      let expiryMonth, expiryYear;
-      try {
-        const expiry = arcPayService.parseExpiryDate(paymentInfo.expiryDate);
-        expiryMonth = expiry.month;
-        expiryYear = expiry.year;
-      } catch (error) {
-        setLoading(false);
-        Alert.alert('Invalid Expiry Date', 'Please enter expiry date in MM/YY format');
-        return;
-      }
-
-      // Validate card number
-      if (!arcPayService.validateCardNumber(paymentInfo.cardNumber)) {
-        setLoading(false);
-        Alert.alert('Invalid Card', 'Please enter a valid card number');
-        return;
-      }
-
-      // Process payment through ARC Pay
-      console.log('💳 Processing payment through ARC Pay...');
-      const paymentResult = await arcPayService.processPayment({
-        amount: totalAmount,
-        currency: selectedFlight.price?.currency || 'USD',
-        orderReference,
-        customerEmail: contactEmail,
-        customerPhone: contactPhone,
-        customerName: `${travelers[0].firstName} ${travelers[0].lastName}`,
-        cardNumber: paymentInfo.cardNumber,
-        cardHolder: paymentInfo.cardHolder,
-        expiryMonth,
-        expiryYear,
-        cvv: paymentInfo.cvv,
-        description: `Flight Booking - ${selectedFlight.itineraries?.[0]?.segments?.[0]?.departure?.iataCode} to ${selectedFlight.itineraries?.[0]?.segments?.[selectedFlight.itineraries[0].segments.length - 1]?.arrival?.iataCode}`,
-      });
-
-      console.log('📊 Payment Result:', paymentResult);
-
-      if (!paymentResult.success) {
-        setLoading(false);
-        Alert.alert(
-          'Payment Failed',
-          paymentResult.error || 'Unable to process payment. Please check your card details and try again.'
-        );
-        return;
-      }
-
-      // Format travelers for Amadeus API
+      // Format travelers for backend quote / booking_details
       const formattedTravelers = travelers.map((traveler) => ({
         id: traveler.id,
         dateOfBirth: traveler.dateOfBirth,
@@ -190,43 +127,63 @@ const FlightPaymentScreen = ({ route, navigation }) => {
         },
       }));
 
-      // Create booking
-      const result = await flightService.createOrder({
-        flightOffers: [selectedFlight],
-        travelers: formattedTravelers,
-        contactEmail,
-        contactPhone,
+      const itinerary = selectedFlight.itineraries?.[0];
+      const firstSegmentLocal = itinerary?.segments?.[0];
+      const lastSegmentLocal = itinerary?.segments?.[itinerary.segments.length - 1];
+
+      const origin = firstSegmentLocal?.departure?.iataCode || 'Origin';
+      const destination = lastSegmentLocal?.arrival?.iataCode || 'Destination';
+
+      const breakdown = {
+        base_fare: totalAmount,
+        taxes: 0,
+        fees: 0,
+      };
+
+      const quote = await quoteService.createQuoteForBooking({
+        bookingType: 'flight',
+        title: `Flight Booking - ${origin} to ${destination}`,
+        description: 'Flight booking via mobile app',
+        totalAmount,
+        currency,
+        breakdown,
+        bookingDetails: {
+          flight_offer: selectedFlight,
+          travelers: formattedTravelers,
+          contact_info: {
+            email: contactEmail,
+            phone: contactPhone,
+          },
+          search_params: searchParams,
+        },
+        customerEmail: contactEmail,
+        customerName: `${travelers[0].firstName} ${travelers[0].lastName}`,
+        customerPhone: contactPhone,
       });
 
-      setLoading(false);
+      const quoteId = quote?.id;
 
-      if (result.success) {
-        // Navigate to confirmation screen with payment info
-        navigation.navigate('FlightConfirmation', {
-          pnr: result.pnr,
-          orderId: result.orderId || orderReference,
-          orderData: result.orderData,
-          travelers: formattedTravelers,
-          flight: selectedFlight,
-          payment: {
-            transactionId: paymentResult.transactionId,
-            status: paymentResult.status,
-            authorizationCode: paymentResult.authorizationCode,
-            amount: paymentResult.amount,
-            currency: paymentResult.currency,
-            processedAt: new Date().toISOString(),
-          },
-          orderReference,
-        });
-      } else {
-        Alert.alert(
-          'Booking Failed',
-          result.error || 'Unable to complete booking. Please try again.'
-        );
+      if (!quoteId) {
+        throw new Error('Quote ID missing from server response');
       }
+
+      console.log('✅ Quote created for booking:', quoteId);
+
+      // Start ARC Pay hosted checkout using quoteId
+      payForFlight(quoteId, totalAmount, {
+        onSuccess: () => {
+          // ArcPaymentScreen will handle navigation to success screen
+        },
+        onFailed: (errorMessage) => {
+          Alert.alert(
+            'Payment Failed',
+            errorMessage || 'Unable to complete payment. Please try again.'
+          );
+        },
+      });
     } catch (error) {
       setLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Error', error.message || 'An unexpected error occurred. Please try again.');
       console.error('Booking error:', error);
     }
   };
@@ -372,56 +329,7 @@ const FlightPaymentScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        {/* Payment Information */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Payment Information</Text>
-            <TouchableOpacity style={styles.testButton} onPress={fillTestCard}>
-              <Text style={styles.testButtonText}>🧪 Fill Test Card</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.form}>
-            <Text style={styles.label}>Card Number *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1234 5678 9012 3456"
-              value={paymentInfo.cardNumber}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardNumber: text }))}
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>Cardholder Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="John Doe"
-              value={paymentInfo.cardHolder}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardHolder: text }))}
-            />
-
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Expiry Date *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  value={paymentInfo.expiryDate}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, expiryDate: text }))}
-                />
-              </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>CVV *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123"
-                  value={paymentInfo.cvv}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cvv: text }))}
-                  keyboardType="numeric"
-                  secureTextEntry
-                />
-              </View>
-            </View>
-          </View>
-        </View>
+        {/* Payment Information is handled via ARC Pay Hosted Checkout (no card capture here) */}
 
         {/* Important Notes */}
         <View style={styles.section}>
@@ -446,9 +354,9 @@ const FlightPaymentScreen = ({ route, navigation }) => {
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.bookButton, loading && styles.bookButtonDisabled]}
+          style={[styles.bookButton, (loading || isProcessing) && styles.bookButtonDisabled]}
           onPress={handlePayment}
-          disabled={loading}
+          disabled={loading || isProcessing}
         >
           {loading ? (
             <>

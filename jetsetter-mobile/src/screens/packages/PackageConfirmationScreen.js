@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import packageService from '../../services/packageService';
+import notificationService from '../../services/notificationService';
 
 const PackageConfirmationScreen = ({ route, navigation }) => {
   const { booking, package: pkg, payment, orderReference } = route.params;
@@ -29,6 +30,11 @@ const PackageConfirmationScreen = ({ route, navigation }) => {
 
         await AsyncStorage.setItem('completedPackageBooking', JSON.stringify(bookingToSave));
         console.log('✅ Package booking saved to AsyncStorage');
+
+        await notificationService.sendBookingConfirmation(
+          'Package',
+          booking.bookingReference || orderReference
+        );
       } catch (error) {
         console.error('❌ Error saving package booking:', error);
       }

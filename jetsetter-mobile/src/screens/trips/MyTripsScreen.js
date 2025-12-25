@@ -7,169 +7,108 @@ import {
   Modal,
   RefreshControl,
   Animated,
+  Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import MyTripsService from '../../services/MyTripsService';
+import BookingInfoService from '../../services/BookingInfoService';
 import styles from './styles/MyTripsScreen.styles';
 
 const MyTripsScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [activeFilter, setActiveFilter] = useState('All');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [bookings, setBookings] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load bookings from AsyncStorage
-  const loadBookings = useCallback(async () => {
+  // Load trips from backend
+  const loadData = useCallback(async () => {
     try {
-      const allBookings = [];
+      setLoading(true);
+      console.log('🔍 Loading trips from backend...');
+      const [inquiriesData, bookingsData] = await Promise.all([
+        MyTripsService.getMyInquiries().catch((err) => {
+          console.error('Error fetching inquiries:', err);
+          return { success: false, data: [] };
+        }),
+        MyTripsService.getMyBookings().catch((err) => {
+          console.error('Error fetching bookings:', err);
+          return { success: false, data: [] };
+        }),
+      ]);
 
-      console.log('🔍 Loading bookings from AsyncStorage...');
-
-      // Load flight bookings
-      const flightBooking = await AsyncStorage.getItem('completedFlightBooking');
-      if (flightBooking) {
-        try {
-          const booking = JSON.parse(flightBooking);
-          console.log('Parsed flight booking:', booking);
-          allBookings.push({
-            ...booking,
-            type: 'flight',
-            bookingDate: booking.orderCreatedAt || new Date().toISOString()
-          });
-        } catch (error) {
-          console.error('Error parsing flight booking:', error);
-        }
+      // Handle inquiries - check multiple response structures
+      let inquiriesList = [];
+      if (inquiriesData.success) {
+        inquiriesList = inquiriesData.data || inquiriesData.inquiries || [];
+        setInquiries(Array.isArray(inquiriesList) ? inquiriesList : []);
+        console.log('✅ Loaded inquiries:', inquiriesList.length);
+      } else {
+        console.log('⚠️ No inquiries loaded');
+        setInquiries([]);
       }
-
-      // Load cruise bookings
-      const cruiseBooking = await AsyncStorage.getItem('completedBooking');
-      if (cruiseBooking) {
-        try {
-          const booking = JSON.parse(cruiseBooking);
-          console.log('Parsed cruise booking:', booking);
-          allBookings.push({
-            ...booking,
-            type: 'cruise',
-            bookingDate: booking.orderCreatedAt || new Date().toISOString()
-          });
-        } catch (error) {
-          console.error('Error parsing cruise booking:', error);
-        }
+      
+      // Handle bookings
+      let bookingsList = [];
+      if (bookingsData.success) {
+        bookingsList = bookingsData.data || bookingsData.bookings || [];
+        setBookings(Array.isArray(bookingsList) ? bookingsList : []);
+        console.log('✅ Loaded bookings:', bookingsList.length);
+      } else {
+        console.log('⚠️ No bookings loaded');
+        setBookings([]);
       }
-
-      // Load hotel bookings
-      const hotelBooking = await AsyncStorage.getItem('completedHotelBooking');
-      if (hotelBooking) {
-        try {
-          const booking = JSON.parse(hotelBooking);
-          console.log('Parsed hotel booking:', booking);
-          allBookings.push({
-            ...booking,
-            type: 'hotel',
-            bookingDate: booking.orderCreatedAt || new Date().toISOString()
-          });
-        } catch (error) {
-          console.error('Error parsing hotel booking:', error);
-        }
-      }
-
-      // Load package bookings
-      const packageBooking = await AsyncStorage.getItem('completedPackageBooking');
-      if (packageBooking) {
-        try {
-          const booking = JSON.parse(packageBooking);
-          console.log('Parsed package booking:', booking);
-          allBookings.push({
-            ...booking,
-            type: 'package',
-            bookingDate: booking.orderCreatedAt || new Date().toISOString()
-          });
-        } catch (error) {
-          console.error('Error parsing package booking:', error);
-        }
-      }
-
-      console.log('📋 Total bookings loaded:', allBookings.length);
-      setBookings(allBookings);
+      
+      console.log('📋 Final count - Inquiries:', inquiriesList.length, 'Bookings:', bookingsList.length);
     } catch (error) {
-      console.error('Error loading bookings:', error);
+      console.error('Error loading trips:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authStatus = await AsyncStorage.getItem('isAuthenticated');
-        if (authStatus !== 'true') {
-          setIsGuest(true);
-          setTimeout(() => {
-            setShowLoginPopup(true);
-          }, 500);
-        } else {
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        setIsGuest(true);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // Load bookings when screen is focused
+  // Load data when screen is focused
   useFocusEffect(
     useCallback(() => {
-      loadBookings();
-    }, [loadBookings])
+      loadData();
+    }, [loadData])
   );
 
-  // Refresh bookings
+  // Refresh data
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadBookings();
+    await loadData();
     setRefreshing(false);
-  }, [loadBookings]);
+  }, [loadData]);
 
-  // Filter bookings
-  const getFilteredBookings = () => {
-    let filtered = bookings;
-
-    // Filter by type
-    if (activeFilter !== 'All') {
-      const typeMap = {
-        'Flights': 'flight',
-        'Cruise': 'cruise',
-        'Hotels': 'hotel',
-        'Packages': 'package',
-      };
-      const targetType = typeMap[activeFilter];
-      filtered = filtered.filter(booking => booking.type === targetType);
-    }
-
-    // Filter by status (tab)
-    if (activeTab === 'Upcoming') {
-      filtered = filtered.filter(booking =>
-        booking.status !== 'CANCELLED' && booking.status !== 'FAILED'
-      );
-    } else if (activeTab === 'Cancelled') {
-      filtered = filtered.filter(booking => booking.status === 'CANCELLED');
-    } else if (activeTab === 'Failed') {
-      filtered = filtered.filter(booking => booking.status === 'FAILED');
-    } else if (activeTab === 'Past') {
-      filtered = [];
-    }
-
-    return filtered;
+  // Filter items
+  const filterItems = (items, type) => {
+    const now = new Date();
+    return items.filter((item) => {
+      if (type === 'Upcoming') {
+        const date = item.departure_date || item.start_date || item.flight_departure_date;
+        return date && new Date(date) >= now;
+      } else {
+        const date = item.departure_date || item.start_date || item.flight_departure_date;
+        return !date || new Date(date) < now;
+      }
+    });
   };
 
-  const filteredBookings = getFilteredBookings();
+  const getDisplayItems = () => {
+    if (activeTab === 'Requests') {
+      return inquiries;
+    }
+    const allBookings = bookings;
+    return filterItems(allBookings, activeTab);
+  };
+
+  const displayItems = getDisplayItems();
 
   // Get booking type info
   const getBookingTypeInfo = (type) => {
@@ -206,16 +145,144 @@ const MyTripsScreen = ({ navigation }) => {
     return typeInfo[type] || typeInfo.flight;
   };
 
+  // Handle Pay Now with booking info check
+  const handlePayQuote = async (quote, inquiry) => {
+    try {
+      console.log('💳 Pay Now clicked for quote:', quote.id);
+      console.log('📋 Inquiry type:', inquiry.inquiry_type);
+      
+      // Check if booking info exists and is complete
+      let bookingInfo = null;
+      try {
+        bookingInfo = await BookingInfoService.getBookingInfo(quote.id);
+        console.log('📦 Booking info result:', bookingInfo ? 'Found' : 'Not found');
+      } catch (error) {
+        console.log('⚠️ Error fetching booking info (will show form):', error.message);
+        bookingInfo = null;
+      }
+      
+      const checkResult = BookingInfoService.checkBookingInfoComplete(
+        bookingInfo,
+        inquiry.inquiry_type
+      );
+      
+      console.log('✅ Booking info check result:', {
+        isComplete: checkResult.isComplete,
+        missingFields: checkResult.missingFields,
+      });
+
+      if (!checkResult.isComplete) {
+        console.log('📝 Booking info incomplete, navigating directly to form...');
+        // Navigate directly to booking info form (skip alert for better UX)
+        navigation.navigate('BookingInfoForm', {
+          quoteId: quote.id,
+          inquiryType: inquiry.inquiry_type,
+          onComplete: (savedBookingInfo) => {
+            console.log('✅ Booking info saved, status:', savedBookingInfo.status);
+            if (savedBookingInfo.status === 'completed' || savedBookingInfo.status === 'verified') {
+              navigation.navigate('ArcPayment', {
+                quoteId: quote.id,
+                inquiryId: inquiry.id,
+              });
+            }
+          },
+        });
+        return;
+      }
+
+      console.log('✅ Booking info complete, proceeding to payment...');
+      // Booking info is complete, proceed to payment
+      navigation.navigate('ArcPayment', {
+        quoteId: quote.id,
+        inquiryId: inquiry.id,
+      });
+    } catch (error) {
+      console.error('❌ Error in handlePayQuote:', error);
+      Alert.alert('Error', error.message || 'Failed to check booking information');
+    }
+  };
+
+  // Render inquiry card
+  const renderInquiryCard = (inquiry) => {
+    const hasUnpaidQuote = inquiry.quotes?.some(
+      (q) => q.status === 'sent' && q.payment_status === 'unpaid'
+    );
+
+    return (
+      <TouchableOpacity
+        key={inquiry.id}
+        style={styles.bookingCard}
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('InquiryDetail', { inquiryId: inquiry.id })}
+      >
+        <LinearGradient
+          colors={['#3b82f6', '#1e40af']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.cardTopBar}
+        />
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
+              <Ionicons name="document-text" size={24} color="#3b82f6" />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.bookingTitle}>
+                {inquiry.inquiry_type?.charAt(0).toUpperCase() + inquiry.inquiry_type?.slice(1) || 'Request'}
+              </Text>
+              <Text style={styles.bookingId}>
+                {inquiry.flight_destination || inquiry.hotel_destination || inquiry.cruise_destination || inquiry.package_destination || 'Custom Request'}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.statusBadge, styles[`status${inquiry.status}`]]}>
+            <Text style={styles.statusText}>{inquiry.status || 'pending'}</Text>
+          </View>
+        </View>
+
+        {inquiry.quotes && inquiry.quotes.length > 0 && (
+          <View style={styles.quotesSection}>
+            {inquiry.quotes.map((quote) => (
+              <View key={quote.id} style={styles.quoteRow}>
+                <Text style={styles.quoteText}>
+                  {quote.quote_number || quote.id.slice(-8)} - ${parseFloat(quote.total_amount || 0).toFixed(2)}
+                </Text>
+                {quote.payment_status === 'unpaid' && quote.status === 'sent' && (
+                  <TouchableOpacity
+                    style={styles.payButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handlePayQuote(quote, inquiry);
+                    }}
+                  >
+                    <Text style={styles.payButtonText}>Pay Now</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        <Text style={styles.cardDate}>
+          Created: {new Date(inquiry.created_at).toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   // Render booking card
   const renderBookingCard = (booking) => {
     const typeInfo = getBookingTypeInfo(booking.type);
     const bookingDate = new Date(booking.bookingDate || booking.orderCreatedAt);
+    const isCancelled = booking.status === 'CANCELLED';
+    const canModify = !isCancelled && booking.status === 'CONFIRMED';
 
     return (
       <TouchableOpacity
-        key={booking.orderId || booking.bookingReference}
+        key={booking.orderId || booking.bookingReference || booking.bookingId}
         style={styles.bookingCard}
         activeOpacity={0.7}
+        onPress={() => navigation.navigate('BookingDetail', { booking })}
       >
         {/* Colored Top Bar */}
         <LinearGradient
@@ -234,13 +301,13 @@ const MyTripsScreen = ({ navigation }) => {
             <View style={styles.headerTextContainer}>
               <Text style={styles.bookingTitle}>{typeInfo.label} Booking</Text>
               <Text style={styles.bookingId}>
-                {booking.pnr || booking.orderId || booking.bookingReference}
+                {booking.pnr || booking.orderId || booking.bookingReference || booking.bookingId}
               </Text>
             </View>
           </View>
           <View style={[
             styles.statusBadge,
-            booking.status === 'CONFIRMED' ? styles.statusConfirmed : styles.statusCancelled
+            isCancelled ? styles.statusCancelled : styles.statusConfirmed
           ]}>
             <Text style={styles.statusText}>
               {booking.status || 'Confirmed'}
@@ -262,35 +329,52 @@ const MyTripsScreen = ({ navigation }) => {
             <View style={styles.infoRow}>
               <Ionicons name="cash-outline" size={16} color="#6B7280" />
               <Text style={styles.infoLabel}>Amount</Text>
-              <Text style={styles.infoValue}>${booking.amount}</Text>
+              <Text style={styles.infoValue}>${booking.amount || booking.totalAmount || '0.00'}</Text>
             </View>
           )}
 
-          {booking.transactionId && (
+          {booking.payment?.transactionId && (
             <View style={styles.infoRow}>
               <Ionicons name="card-outline" size={16} color="#6B7280" />
               <Text style={styles.infoLabel}>Transaction</Text>
-              <Text style={styles.infoValue}>{booking.transactionId}</Text>
+              <Text style={styles.infoValue}>{booking.payment.transactionId}</Text>
             </View>
           )}
         </View>
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('BookingDetail', { booking })}
+          >
             <Ionicons name="document-text-outline" size={20} color="#0EA5E9" />
             <Text style={styles.actionText}>Details</Text>
           </TouchableOpacity>
-          <View style={styles.actionDivider} />
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="download-outline" size={20} color="#0EA5E9" />
-            <Text style={styles.actionText}>Download</Text>
-          </TouchableOpacity>
-          <View style={styles.actionDivider} />
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="share-outline" size={20} color="#0EA5E9" />
-            <Text style={styles.actionText}>Share</Text>
-          </TouchableOpacity>
+          {canModify && (
+            <>
+              <View style={styles.actionDivider} />
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('BookingDetail', { booking })}
+              >
+                <Ionicons name="create-outline" size={20} color="#0EA5E9" />
+                <Text style={styles.actionText}>Modify</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {!isCancelled && (
+            <>
+              <View style={styles.actionDivider} />
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('BookingDetail', { booking })}
+              >
+                <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+                <Text style={[styles.actionText, { color: '#EF4444' }]}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -331,18 +415,12 @@ const MyTripsScreen = ({ navigation }) => {
             <Ionicons name="briefcase" size={28} color="#FFF" />
             <Text style={styles.headerTitle}>My Trips</Text>
           </View>
-          {isGuest ? (
-            <TouchableOpacity
-              style={styles.loginButton}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Text style={styles.loginButtonText}>Log In</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-              <Ionicons name="person-circle" size={36} color="#FFF" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.newRequestButton}
+            onPress={() => navigation.navigate('NewRequest')}
+          >
+            <Text style={styles.newRequestButtonText}>+ New Request</Text>
+          </TouchableOpacity>
         </View>
         {isGuest && (
           <View style={styles.guestBanner}>
@@ -354,7 +432,7 @@ const MyTripsScreen = ({ navigation }) => {
 
       {/* Segmented Control for Status */}
       <View style={styles.segmentedControl}>
-        {['Upcoming', 'Cancelled', 'Past'].map((tab, index) => (
+        {['Upcoming', 'Past', 'Requests'].map((tab, index) => (
           <TouchableOpacity
             key={tab}
             style={[
@@ -426,18 +504,16 @@ const MyTripsScreen = ({ navigation }) => {
           />
         }
       >
-        {filteredBookings.length > 0 ? (
+        {displayItems.length > 0 ? (
           <>
             <View style={styles.resultSummary}>
               <Text style={styles.resultText}>
-                {filteredBookings.length} {activeTab.toLowerCase()} {filteredBookings.length === 1 ? 'trip' : 'trips'}
+                {displayItems.length} {activeTab.toLowerCase()} {displayItems.length === 1 ? 'item' : 'items'}
               </Text>
-              <TouchableOpacity style={styles.sortButton}>
-                <Ionicons name="swap-vertical" size={16} color="#6B7280" />
-                <Text style={styles.sortText}>Sort</Text>
-              </TouchableOpacity>
             </View>
-            {filteredBookings.map(renderBookingCard)}
+            {activeTab === 'Requests'
+              ? inquiries.map(renderInquiryCard)
+              : bookings.map(renderBookingCard)}
           </>
         ) : (
           renderEmptyState()

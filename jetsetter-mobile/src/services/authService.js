@@ -244,8 +244,8 @@ class AuthService {
    */
   async isAuthenticated() {
     try {
-      const isAuth = await AsyncStorage.getItem('isAuthenticated');
-      return isAuth === 'true';
+      // Use Firebase auth state as the single source of truth
+      return !!auth.currentUser;
     } catch (error) {
       console.error('Check authentication error:', error);
       return false;

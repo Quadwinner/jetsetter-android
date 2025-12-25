@@ -9,6 +9,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import notificationService from '../../services/notificationService';
 import styles from './styles/CruiseConfirmationScreen.styles';
 
 const CruiseConfirmationScreen = ({ route, navigation }) => {
@@ -37,6 +38,8 @@ const CruiseConfirmationScreen = ({ route, navigation }) => {
 
         await AsyncStorage.setItem('completedBooking', JSON.stringify(bookingToSave));
         console.log('✅ Cruise booking saved to AsyncStorage');
+
+        await notificationService.sendBookingConfirmation('Cruise', orderReference);
       } catch (error) {
         console.error('❌ Error saving cruise booking:', error);
       }

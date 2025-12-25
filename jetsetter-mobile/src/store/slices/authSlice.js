@@ -39,6 +39,7 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
+      state.loading = false; // Always set loading to false when setUser is called
     },
   },
 });
