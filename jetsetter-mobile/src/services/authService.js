@@ -21,6 +21,8 @@ if (Platform.OS !== 'web') {
     // Configure Google Sign-In only if available
     GoogleSignin?.configure({
       webClientId: '84512959275-l25c7c0qagj87bbpb7fdtomiseubmnju.apps.googleusercontent.com',
+      offlineAccess: true,
+      scopes: ['profile', 'email'],
     });
   } catch (error) {
     console.log('Google Sign-In not available:', error.message);

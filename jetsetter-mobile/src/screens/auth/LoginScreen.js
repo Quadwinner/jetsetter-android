@@ -85,19 +85,21 @@ const LoginScreen = ({ navigation }) => {
       const result = await authService.signInWithGoogle();
 
       if (result.success) {
-        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
-        // The onAuthStateChange listener in App.js will update Redux state
-        console.log('Google Sign-In successful - Firebase auth state will update automatically');
+        // Dispatch loginSuccess immediately with user data
+        dispatch(loginSuccess(result.user));
+        console.log('Google Sign-In successful - navigating to app');
+        // Navigation will happen automatically via auth state in App.js
       } else {
         dispatch(loginFailure(result.error));
         Alert.alert('Google Sign-In Failed', result.error);
+        setLoading(false);
       }
     } catch (error) {
       dispatch(loginFailure(error.message));
       Alert.alert('Error', 'An error occurred during Google sign-in.');
-    } finally {
       setLoading(false);
     }
+    // Don't setLoading(false) on success - let navigation happen
   };
 
   return (
