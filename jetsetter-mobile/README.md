@@ -239,5 +239,10 @@ This project is proprietary software. All rights reserved.
 
 **Built with ❤️ by the Jetsetters Development Team**
 
+## 📝 Recent Updates
 
+- ✅ Firebase Google Sign-In configuration completed
+- ✅ Booking information collection flow implemented
+- ✅ Request and My Trips features fully integrated
+- ✅ Payment gateway integration with ARC Pay
 
