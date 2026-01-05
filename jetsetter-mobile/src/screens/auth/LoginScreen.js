@@ -87,8 +87,9 @@ const LoginScreen = ({ navigation }) => {
       if (result.success) {
         // Dispatch loginSuccess immediately with user data
         dispatch(loginSuccess(result.user));
-        console.log('Google Sign-In successful - navigating to app');
-        // Navigation will happen automatically via auth state in App.js
+        console.log('Google Sign-In successful');
+        // Keep loading state to prevent UI flash
+        // Firebase onAuthStateChange will trigger and navigate to home
       } else {
         dispatch(loginFailure(result.error));
         Alert.alert('Google Sign-In Failed', result.error);
@@ -99,7 +100,6 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert('Error', 'An error occurred during Google sign-in.');
       setLoading(false);
     }
-    // Don't setLoading(false) on success - let navigation happen
   };
 
   return (

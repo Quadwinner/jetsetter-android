@@ -211,7 +211,10 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer
+      ref={navigationRef}
+      key={isAuthenticated ? 'authenticated' : 'unauthenticated'}
+    >
       {!hasSeenOnboarding ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
