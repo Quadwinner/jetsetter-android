@@ -18,6 +18,9 @@
 - No `npm run lint` or `npm test` commands exist.
 - Code is plain JavaScript (`.js` files).
 
+### Known Issues
+- The **Packages** tab crashes the Chrome renderer in web mode (pre-existing). All other tabs (Home, Flights, Hotels, My Trips) work fine.
+
 ### Key Gotchas
 - `app.config.js` uses `require('dotenv').config()` — `dotenv` is a transitive dependency (installed via other packages), not listed in `package.json` directly.
 - `app.json` and `app.config.js` both exist; Expo merges them, with `app.config.js` taking precedence.
