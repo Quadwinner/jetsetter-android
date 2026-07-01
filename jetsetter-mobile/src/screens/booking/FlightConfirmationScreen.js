@@ -107,7 +107,7 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.flightPathContainer}>
                 <View style={styles.pathLine} />
-                <Ionicons name="airplane" size={24} color="#0EA5E9" style={styles.planeIcon} />
+                <Ionicons name="airplane" size={24} color="#0890BC" style={styles.planeIcon} />
                 <View style={styles.pathLine} />
               </View>
               <View style={styles.routePoint}>
@@ -163,7 +163,7 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
             {travelers.map((traveler, index) => (
               <View key={index} style={[styles.travelerRow, index > 0 && styles.travelerBorder]}>
                 <View style={styles.travelerIcon}>
-                  <Ionicons name="person" size={24} color="#0EA5E9" />
+                  <Ionicons name="person" size={24} color="#0890BC" />
                 </View>
                 <View style={styles.travelerInfo}>
                   <Text style={styles.travelerName}>
@@ -183,19 +183,19 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Important Information</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoItem}>
-              <Ionicons name="mail-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="mail-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>
                 A confirmation email has been sent to your registered email address
               </Text>
             </View>
             <View style={styles.infoItem}>
-              <Ionicons name="document-text-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="document-text-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>
                 Please check in online 24-48 hours before departure
               </Text>
             </View>
             <View style={styles.infoItem}>
-              <Ionicons name="card-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="card-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>
                 Carry a valid government-issued ID or passport for travel
               </Text>
@@ -212,7 +212,7 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
           style={styles.secondaryButton}
           onPress={handleViewTrips}
         >
-          <Ionicons name="briefcase-outline" size={20} color="#0EA5E9" />
+          <Ionicons name="briefcase-outline" size={20} color="#0890BC" />
           <Text style={styles.secondaryButtonText}>View My Trips</Text>
         </TouchableOpacity>
         <TouchableOpacity

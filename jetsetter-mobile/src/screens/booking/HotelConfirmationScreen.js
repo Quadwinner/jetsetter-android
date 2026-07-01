@@ -107,17 +107,17 @@ const HotelConfirmationScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Guest Information</Text>
           <View style={styles.card}>
             <View style={styles.guestRow}>
-              <Ionicons name="person" size={20} color="#0EA5E9" />
+              <Ionicons name="person" size={20} color="#0890BC" />
               <Text style={styles.guestName}>
                 {booking.guestDetails.firstName} {booking.guestDetails.lastName}
               </Text>
             </View>
             <View style={styles.guestRow}>
-              <Ionicons name="mail" size={20} color="#0EA5E9" />
+              <Ionicons name="mail" size={20} color="#0890BC" />
               <Text style={styles.guestDetail}>{booking.guestDetails.email}</Text>
             </View>
             <View style={styles.guestRow}>
-              <Ionicons name="call" size={20} color="#0EA5E9" />
+              <Ionicons name="call" size={20} color="#0890BC" />
               <Text style={styles.guestDetail}>{booking.guestDetails.phone}</Text>
             </View>
           </View>
@@ -127,15 +127,15 @@ const HotelConfirmationScreen = ({ route, navigation }) => {
           <Text style={styles.sectionTitle}>Important Information</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoItem}>
-              <Ionicons name="mail-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="mail-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>A confirmation email has been sent to your email address</Text>
             </View>
             <View style={styles.infoItem}>
-              <Ionicons name="time-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="time-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>Check-in time is usually 3:00 PM, check-out at 11:00 AM</Text>
             </View>
             <View style={styles.infoItem}>
-              <Ionicons name="card-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="card-outline" size={20} color="#0890BC" />
               <Text style={styles.infoText}>Please carry a valid ID and credit card for check-in</Text>
             </View>
           </View>

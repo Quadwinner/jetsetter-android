@@ -195,12 +195,12 @@ const styles = StyleSheet.create({
   modifyButton: {
     backgroundColor: '#E0F2FE',
     borderWidth: 1,
-    borderColor: '#0EA5E9',
+    borderColor: '#0890BC',
   },
   modifyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
   cancelButton: {
     backgroundColor: '#FEE2E2',

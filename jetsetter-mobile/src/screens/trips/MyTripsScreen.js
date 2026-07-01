@@ -116,9 +116,9 @@ const MyTripsScreen = ({ navigation }) => {
       flight: {
         icon: 'airplane',
         label: 'Flight',
-        color: '#0EA5E9',
+        color: '#0890BC',
         bgColor: '#E0F2FE',
-        gradient: ['#0EA5E9', '#0284C7'],
+        gradient: ['#0890BC', '#055B75'],
       },
       cruise: {
         icon: 'boat',
@@ -348,7 +348,7 @@ const MyTripsScreen = ({ navigation }) => {
             style={styles.actionButton}
             onPress={() => navigation.navigate('BookingDetail', { booking })}
           >
-            <Ionicons name="document-text-outline" size={20} color="#0EA5E9" />
+            <Ionicons name="document-text-outline" size={20} color="#0890BC" />
             <Text style={styles.actionText}>Details</Text>
           </TouchableOpacity>
           {canModify && (
@@ -358,7 +358,7 @@ const MyTripsScreen = ({ navigation }) => {
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('BookingDetail', { booking })}
               >
-                <Ionicons name="create-outline" size={20} color="#0EA5E9" />
+                <Ionicons name="create-outline" size={20} color="#0890BC" />
                 <Text style={styles.actionText}>Modify</Text>
               </TouchableOpacity>
             </>
@@ -405,7 +405,7 @@ const MyTripsScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header with Gradient */}
       <LinearGradient
-        colors={['#0EA5E9', '#0284C7']}
+        colors={['#0890BC', '#055B75']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -499,8 +499,8 @@ const MyTripsScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#0EA5E9']}
-            tintColor="#0EA5E9"
+            colors={['#0890BC']}
+            tintColor="#0890BC"
           />
         }
       >

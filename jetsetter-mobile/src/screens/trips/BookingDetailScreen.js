@@ -30,9 +30,9 @@ const BookingDetailScreen = ({ route, navigation }) => {
       flight: {
         icon: 'airplane',
         label: 'Flight',
-        color: '#0EA5E9',
+        color: '#0890BC',
         bgColor: '#E0F2FE',
-        gradient: ['#0EA5E9', '#0284C7'],
+        gradient: ['#0890BC', '#055B75'],
         service: flightService,
       },
       cruise: {
@@ -355,7 +355,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
               style={[styles.actionButton, styles.modifyButton]}
               onPress={handleModify}
             >
-              <Ionicons name="create-outline" size={20} color="#0EA5E9" />
+              <Ionicons name="create-outline" size={20} color="#0890BC" />
               <Text style={styles.modifyButtonText}>Modify</Text>
             </TouchableOpacity>
           )}

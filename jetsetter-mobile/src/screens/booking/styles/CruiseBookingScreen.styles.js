@@ -53,7 +53,7 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
   stepCircleActive: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
   },
   stepText: {
     fontSize: 16,
@@ -69,7 +69,7 @@ export default StyleSheet.create({
     fontWeight: '500',
   },
   stepLabelActive: {
-    color: '#0EA5E9',
+    color: '#0890BC',
     fontWeight: '600',
   },
 
@@ -146,18 +146,18 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E6F4F8',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#0EA5E9',
+    borderColor: '#0890BC',
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0EA5E9',
+    color: '#0890BC',
     marginLeft: 8,
   },
 
@@ -202,7 +202,7 @@ export default StyleSheet.create({
   totalValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
 
   // Footer
@@ -236,14 +236,14 @@ export default StyleSheet.create({
   },
   nextButton: {
     flex: 2,
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
-    shadowColor: '#0EA5E9',
+    shadowColor: '#0890BC',
     shadowOffset: {
       width: 0,
       height: 4,

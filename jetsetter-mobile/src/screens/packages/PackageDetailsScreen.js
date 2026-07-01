@@ -70,9 +70,9 @@ const PackageDetailsScreen = ({ route, navigation }) => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
             <Text style={{ fontSize: 12, color: '#64748B' }}>Total Price</Text>
-            <Text style={{ fontSize: 24, fontWeight: '700', color: '#0EA5E9' }}>{packageService.formatPrice(pkg.price)}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '700', color: '#0890BC' }}>{packageService.formatPrice(pkg.price)}</Text>
           </View>
-          <TouchableOpacity style={{ backgroundColor: '#0EA5E9', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 }} onPress={() => navigation.navigate('PackageBooking', { package: pkg })}>
+          <TouchableOpacity style={{ backgroundColor: '#0890BC', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 }} onPress={() => navigation.navigate('PackageBooking', { package: pkg })}>
             <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 16 }}>Book Now</Text>
           </TouchableOpacity>
         </View>

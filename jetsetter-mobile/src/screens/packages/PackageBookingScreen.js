@@ -115,7 +115,7 @@ const PackageBookingScreen = ({ route, navigation }) => {
           <View style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 8 }}>{pkg.title}</Text>
             <Text style={{ color: '#64748B' }}>{pkg.location}</Text>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#0EA5E9', marginTop: 12 }}>{packageService.formatPrice(pkg.price)}</Text>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#0890BC', marginTop: 12 }}>{packageService.formatPrice(pkg.price)}</Text>
           </View>
           <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 12 }}>Traveler Details</Text>
           <View style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
@@ -142,7 +142,7 @@ const PackageBookingScreen = ({ route, navigation }) => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B' }}>Payment Information</Text>
           </View>
-          <View style={{ backgroundColor: '#EFF6FF', borderRadius: 12, padding: 16, marginBottom: 16, flexDirection: 'row', gap: 12 }}>
+          <View style={{ backgroundColor: '#E6F4F8', borderRadius: 12, padding: 16, marginBottom: 16, flexDirection: 'row', gap: 12 }}>
             <Ionicons name="lock-closed" size={24} color="#10B981" />
             <Text style={{ flex: 1, fontSize: 14, color: '#1E40AF', lineHeight: 20 }}>
               Payment is completed on ARC Pay's secure hosted checkout. Card details are not collected or stored in this app.
@@ -169,7 +169,7 @@ const PackageBookingScreen = ({ route, navigation }) => {
         padding: 16,
         paddingBottom: Math.max(insets.bottom, 16),
       }}>
-        <TouchableOpacity style={{ backgroundColor: (loading || isProcessing) ? '#94A3B8' : '#0EA5E9', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={handleBooking} disabled={loading || isProcessing}>
+        <TouchableOpacity style={{ backgroundColor: (loading || isProcessing) ? '#94A3B8' : '#0890BC', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={handleBooking} disabled={loading || isProcessing}>
           {loading || isProcessing ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 16 }}>Continue to ARC Pay</Text>}
         </TouchableOpacity>
       </View>

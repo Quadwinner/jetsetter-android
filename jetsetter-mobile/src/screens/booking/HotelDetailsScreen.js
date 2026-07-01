@@ -64,7 +64,7 @@ const HotelDetailsScreen = ({ route, navigation }) => {
                 <View style={styles.roomHeader}>
                   <Text style={styles.roomType}>{offer.roomType}</Text>
                   {selectedOffer.offerId === offer.offerId && (
-                    <Ionicons name="checkmark-circle" size={24} color="#0EA5E9" />
+                    <Ionicons name="checkmark-circle" size={24} color="#0890BC" />
                   )}
                 </View>
                 <Text style={styles.cancellationPolicy}>{offer.cancellationPolicy}</Text>

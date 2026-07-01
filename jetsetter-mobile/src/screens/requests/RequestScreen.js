@@ -566,13 +566,13 @@ const s = StyleSheet.create({
   headerSub: { fontSize: 14, color: '#BFDBFE', fontWeight: '300' },
   tabBar: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   tabItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 4 },
-  tabItemActive: { borderBottomWidth: 2, borderBottomColor: T.accent, backgroundColor: '#EFF6FF' },
+  tabItemActive: { borderBottomWidth: 2, borderBottomColor: T.accent, backgroundColor: '#E6F4F8' },
   tabLabel: { fontSize: 12, color: T.textSecondary, fontWeight: '500' },
   tabLabelActive: { color: T.accent, fontWeight: '700' },
 
   typeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   typeCard: { flex: 1, alignItems: 'center', padding: 10, borderRadius: 12, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#F9FAFB', marginHorizontal: 3 },
-  typeCardActive: { borderColor: T.accent, backgroundColor: '#EFF6FF', transform: [{ scale: 1.03 }] },
+  typeCardActive: { borderColor: T.accent, backgroundColor: '#E6F4F8', transform: [{ scale: 1.03 }] },
   typeLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '600', marginTop: 4, textAlign: 'center' },
   typeLabelActive: { color: T.accent },
 
@@ -593,13 +593,13 @@ const s = StyleSheet.create({
 
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, borderWidth: 1, borderColor: T.border, backgroundColor: '#fff' },
-  chipActive: { borderColor: T.accent, backgroundColor: '#EFF6FF' },
+  chipActive: { borderColor: T.accent, backgroundColor: '#E6F4F8' },
   chipText: { fontSize: 12, color: T.textSecondary },
   chipTextActive: { color: T.accent, fontWeight: '600' },
 
   interestGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   interestChip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: T.border, backgroundColor: '#fff', width: '47%' },
-  interestChipActive: { borderColor: T.accent, backgroundColor: '#EFF6FF' },
+  interestChipActive: { borderColor: T.accent, backgroundColor: '#E6F4F8' },
   interestText: { fontSize: 13, color: T.textSecondary, textAlign: 'center' },
   interestTextActive: { color: T.accent, fontWeight: '600' },
 

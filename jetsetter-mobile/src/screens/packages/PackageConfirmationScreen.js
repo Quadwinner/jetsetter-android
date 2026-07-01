@@ -85,7 +85,7 @@ const PackageConfirmationScreen = ({ route, navigation }) => {
         </View>
       </ScrollView>
       <View style={{ backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E2E8F0', padding: 16 }}>
-        <TouchableOpacity style={{ backgroundColor: '#0EA5E9', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Main' }] })}>
+        <TouchableOpacity style={{ backgroundColor: '#0890BC', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Main' }] })}>
           <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 16 }}>Done</Text>
         </TouchableOpacity>
       </View>

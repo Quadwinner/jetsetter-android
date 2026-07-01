@@ -326,7 +326,7 @@ const FlightPaymentScreen = ({ route, navigation }) => {
         {/* Important Notes */}
         <View style={styles.section}>
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={24} color="#0EA5E9" />
+            <Ionicons name="information-circle" size={24} color="#0890BC" />
             <Text style={styles.infoText}>
               Please ensure all traveler details match their government-issued ID or passport.
             </Text>

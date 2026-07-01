@@ -95,7 +95,7 @@ const HotelResultsScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.amenitiesRow}>
                 {hotel.amenities.slice(0, 4).map((amenity, i) => (
-                  <Ionicons key={i} name={renderAmenityIcon(amenity)} size={16} color="#0EA5E9" style={styles.amenityIcon} />
+                  <Ionicons key={i} name={renderAmenityIcon(amenity)} size={16} color="#0890BC" style={styles.amenityIcon} />
                 ))}
               </View>
               <View style={styles.priceRow}>

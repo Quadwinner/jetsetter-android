@@ -92,7 +92,7 @@ export default StyleSheet.create({
   priceText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0EA5E9',
+    color: '#0890BC',
     marginTop: 8,
   },
 
@@ -139,7 +139,7 @@ export default StyleSheet.create({
   // Info Box
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E6F4F8',
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -180,17 +180,17 @@ export default StyleSheet.create({
   totalAmount: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
   bookButton: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
-    shadowColor: '#0EA5E9',
+    shadowColor: '#0890BC',
     shadowOffset: {
       width: 0,
       height: 4,

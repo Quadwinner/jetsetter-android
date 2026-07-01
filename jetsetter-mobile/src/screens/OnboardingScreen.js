@@ -20,7 +20,7 @@ const onboardingSlides = [
     title: 'Welcome to Jetsetters',
     description: 'Your gateway to luxury travel experiences. Book flights, hotels, cruises, and vacation packages all in one place.',
     icon: 'airplane',
-    color: '#0EA5E9',
+    color: '#0890BC',
     showLogo: true,
   },
   {

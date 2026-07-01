@@ -133,14 +133,14 @@ export default StyleSheet.create({
 
   // Search Button
   searchButton: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 12,
-    shadowColor: '#0EA5E9',
+    shadowColor: '#0890BC',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -118,7 +118,7 @@ export default StyleSheet.create({
     color: '#6B7280',
   },
   segmentTextActive: {
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
 
   // Filter Chips
@@ -141,8 +141,8 @@ export default StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   filterChipActive: {
-    backgroundColor: '#0EA5E9',
-    borderColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
+    borderColor: '#0890BC',
   },
   filterChipText: {
     fontSize: 14,
@@ -355,7 +355,7 @@ export default StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
 
   // Empty State
@@ -381,13 +381,13 @@ export default StyleSheet.create({
     marginBottom: 24,
   },
   emptyStateButton: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#0EA5E9',
+        shadowColor: '#0890BC',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -456,12 +456,12 @@ export default StyleSheet.create({
     gap: 12,
   },
   modalPrimaryButton: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     paddingVertical: 14,
     borderRadius: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#0EA5E9',
+        shadowColor: '#0890BC',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

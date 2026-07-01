@@ -255,7 +255,7 @@ const s = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '700', color: THEME.textPrimary, marginBottom: 8 },
   modalSubtitle: { fontSize: 14, color: THEME.textSecondary, marginBottom: 16 },
   reasonBtn: { borderWidth: 1, borderColor: THEME.border, borderRadius: 8, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
-  reasonBtnActive: { borderColor: THEME.primary, backgroundColor: '#EFF6FF' },
+  reasonBtnActive: { borderColor: THEME.primary, backgroundColor: '#E6F4F8' },
   reasonText: { fontSize: 14, color: THEME.textSecondary },
   reasonTextActive: { color: THEME.primary, fontWeight: '600' },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 16 },

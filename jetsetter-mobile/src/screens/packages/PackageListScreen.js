@@ -22,12 +22,12 @@ const PackageListScreen = ({ navigation }) => {
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#FFF', paddingTop: 48 }}>
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#1E293B' }}>Vacation Packages</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="person-circle" size={32} color="#0EA5E9" />
+          <Ionicons name="person-circle" size={32} color="#0890BC" />
         </TouchableOpacity>
       </View>
       {loading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#0EA5E9" />
+          <ActivityIndicator size="large" color="#0890BC" />
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -63,10 +63,10 @@ const PackageListScreen = ({ navigation }) => {
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <View>
-                      <Text style={{ fontSize: 24, fontWeight: '700', color: '#0EA5E9' }}>{packageService.formatPrice(pkg.price)}</Text>
+                      <Text style={{ fontSize: 24, fontWeight: '700', color: '#0890BC' }}>{packageService.formatPrice(pkg.price)}</Text>
                       <Text style={{ fontSize: 12, color: '#94A3B8' }}>per person</Text>
                     </View>
-                    <View style={{ backgroundColor: '#0EA5E9', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 }}>
+                    <View style={{ backgroundColor: '#0890BC', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 }}>
                       <Text style={{ color: '#FFF', fontWeight: '600' }}>View Details</Text>
                     </View>
                   </View>

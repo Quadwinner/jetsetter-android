@@ -170,7 +170,7 @@ export default StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E6F4F8',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -246,7 +246,7 @@ export default StyleSheet.create({
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0EA5E9',
+    color: '#0890BC',
   },
   primaryButton: {
     flex: 1,
@@ -255,9 +255,9 @@ export default StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#0890BC',
     gap: 8,
-    shadowColor: '#0EA5E9',
+    shadowColor: '#0890BC',
     shadowOffset: {
       width: 0,
       height: 4,

@@ -25,7 +25,7 @@ export default StyleSheet.create({
   infoItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
   infoText: { flex: 1, fontSize: 14, color: '#475569', lineHeight: 20 },
   footer: { backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E2E8F0', padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 5 },
-  doneButton: { backgroundColor: '#0EA5E9', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 12, gap: 8, shadowColor: '#0EA5E9', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  doneButton: { backgroundColor: '#0890BC', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 12, gap: 8, shadowColor: '#0890BC', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
   doneButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   bottomSpace: { height: 20 },
 });
