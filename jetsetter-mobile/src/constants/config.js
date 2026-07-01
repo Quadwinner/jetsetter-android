@@ -1,6 +1,15 @@
+import Constants from 'expo-constants';
+
 // API Configuration
+// Base URL is env-driven: app.config.js copies process.env.API_BASE_URL into
+// expo `extra`, so set API_BASE_URL in .env to point at a backend.
+//   • Production (default):  https://www.jetsetterss.com/api
+//   • Android emulator dev:  http://10.0.2.2:5004/api
+//   • Physical device dev:   http://<your-LAN-IP>:5004/api  (same Wi-Fi)
+const extra = Constants.expoConfig?.extra || Constants.manifest?.extra || {};
+
 export const API_CONFIG = {
-  BASE_URL: 'https://www.jetsetterss.com/api',
+  BASE_URL: extra.API_BASE_URL || 'https://www.jetsetterss.com/api',
   TIMEOUT: 30000,
 };
 
@@ -8,13 +17,6 @@ export const API_CONFIG = {
 export const SUPABASE_CONFIG = {
   URL: 'https://qqmagqwumjipdqvxbiqu.supabase.co',
   ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbWFncXd1bWppcGRxdnhiaXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDEwMTIsImV4cCI6MjA2MDU3NzAxMn0.Ho8DYLWpX_vQ6syrI2zkU3G5pnNTdnYpgtpyjjGYlDA',
-};
-
-// Firebase Configuration
-export const FIREBASE_CONFIG = {
-  API_KEY: 'AIzaSyDQRZgBAkv6rfSqtJUQk6jLY56ftz0eEMg',
-  AUTH_DOMAIN: 'jets-1b5fa.firebaseapp.com',
-  PROJECT_ID: 'jets-1b5fa',
 };
 
 // Amadeus API Configuration
