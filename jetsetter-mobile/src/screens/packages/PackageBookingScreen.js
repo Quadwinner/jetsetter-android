@@ -4,22 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import packageService from '../../services/packageService';
-import arcPayService from '../../services/arcPayService';
+import quoteService from '../../services/quoteService';
+import useArcPayment from '../../utils/useArcPayment';
 
 const PackageBookingScreen = ({ route, navigation }) => {
   const { package: pkg } = route.params;
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
+  const { payForPackage, isProcessing } = useArcPayment();
   const [traveler, setTraveler] = useState({ firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '' });
   const [travelDate, setTravelDate] = useState('');
-
-  // Payment Information
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
-  });
 
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -47,98 +41,51 @@ const PackageBookingScreen = ({ route, navigation }) => {
       return;
     }
 
-    // Validate payment information
-    if (!paymentInfo.cardNumber || !paymentInfo.cardHolder || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-      Alert.alert('Missing Payment', 'Please complete all payment information');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const totalAmount = pkg.price;
-      const orderReference = `PACKAGE-${Date.now()}-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
+      const totalAmount = Number(pkg.price) || 0;
+      const currency = 'USD';
 
-      console.log('📦 Starting package booking process...');
-      console.log('Order Reference:', orderReference);
+      console.log('📦 Starting package booking via ARC Pay quote flow...');
       console.log('Total Amount:', totalAmount);
 
-      // Parse card expiry date
-      let expiryMonth, expiryYear;
-      try {
-        const expiry = arcPayService.parseExpiryDate(paymentInfo.expiryDate);
-        expiryMonth = expiry.month;
-        expiryYear = expiry.year;
-      } catch (error) {
-        setLoading(false);
-        Alert.alert('Invalid Expiry Date', 'Please enter expiry date in MM/YY format');
-        return;
-      }
-
-      // Validate card number
-      if (!arcPayService.validateCardNumber(paymentInfo.cardNumber)) {
-        setLoading(false);
-        Alert.alert('Invalid Card', 'Please enter a valid card number');
-        return;
-      }
-
-      // Process payment through ARC Pay
-      console.log('💳 Processing payment through ARC Pay...');
-      const paymentResult = await arcPayService.processPayment({
-        amount: totalAmount,
-        currency: 'USD',
-        orderReference,
+      const quote = await quoteService.createQuoteForBooking({
+        bookingType: 'package',
+        title: `Package Booking - ${pkg.title}`,
+        description: `${pkg.location || 'Travel package'}${pkg.duration ? ` • ${pkg.duration}` : ''}`,
+        totalAmount,
+        currency,
+        breakdown: {
+          package_price: totalAmount,
+          taxes: 0,
+          fees: 0,
+        },
+        bookingDetails: {
+          package: pkg,
+          travel_date: travelDate,
+          travelers: [traveler],
+        },
         customerEmail: traveler.email,
-        customerPhone: traveler.phone,
         customerName: `${traveler.firstName} ${traveler.lastName}`,
-        cardNumber: paymentInfo.cardNumber,
-        cardHolder: paymentInfo.cardHolder,
-        expiryMonth,
-        expiryYear,
-        cvv: paymentInfo.cvv,
-        description: `Package Booking - ${pkg.title}`,
+        customerPhone: traveler.phone,
       });
 
-      console.log('📊 Payment Result:', paymentResult);
-
-      if (!paymentResult.success) {
-        setLoading(false);
-        Alert.alert(
-          'Payment Failed',
-          paymentResult.error || 'Unable to process payment. Please check your card details and try again.'
-        );
-        return;
+      const quoteId = quote?.id;
+      if (!quoteId) {
+        throw new Error('Quote ID missing from server response');
       }
-
-      // Create booking only after successful payment
-      const result = await packageService.createBooking({
-        packageId: pkg.id,
-        travelDate,
-        travelers: [traveler],
-        totalPrice: pkg.price,
-        currency: 'USD',
-      });
 
       setLoading(false);
-
-      if (result.success) {
-        // Navigate to confirmation screen with payment info
-        navigation.navigate('PackageConfirmation', {
-          booking: result.booking,
-          package: pkg,
-          payment: {
-            transactionId: paymentResult.transactionId,
-            status: paymentResult.status,
-            authorizationCode: paymentResult.authorizationCode,
-            amount: paymentResult.amount,
-            currency: paymentResult.currency,
-            processedAt: new Date().toISOString(),
-          },
-          orderReference,
-        });
-      } else {
-        Alert.alert('Booking Failed', result.error || 'Unable to complete booking. Please try again.');
-      }
+      payForPackage(quoteId, totalAmount, {
+        currency,
+        onFailed: (errorMessage) => {
+          Alert.alert(
+            'Payment Failed',
+            errorMessage || 'Unable to complete payment. Please try again.'
+          );
+        },
+      });
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
@@ -195,46 +142,11 @@ const PackageBookingScreen = ({ route, navigation }) => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B' }}>Payment Information</Text>
           </View>
-          <View style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 }}>Card Number *</Text>
-            <TextInput
-              style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 16 }}
-              placeholder="1234 5678 9012 3456"
-              value={paymentInfo.cardNumber}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardNumber: text }))}
-              keyboardType="numeric"
-            />
-
-            <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 }}>Cardholder Name *</Text>
-            <TextInput
-              style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12, marginBottom: 16 }}
-              placeholder="John Doe"
-              value={paymentInfo.cardHolder}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardHolder: text }))}
-            />
-
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 }}>Expiry Date *</Text>
-                <TextInput
-                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12 }}
-                  placeholder="MM/YY"
-                  value={paymentInfo.expiryDate}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, expiryDate: text }))}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 }}>CVV *</Text>
-                <TextInput
-                  style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, padding: 12 }}
-                  placeholder="123"
-                  value={paymentInfo.cvv}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cvv: text }))}
-                  keyboardType="numeric"
-                  secureTextEntry
-                />
-              </View>
-            </View>
+          <View style={{ backgroundColor: '#EFF6FF', borderRadius: 12, padding: 16, marginBottom: 16, flexDirection: 'row', gap: 12 }}>
+            <Ionicons name="lock-closed" size={24} color="#10B981" />
+            <Text style={{ flex: 1, fontSize: 14, color: '#1E40AF', lineHeight: 20 }}>
+              Payment is completed on ARC Pay's secure hosted checkout. Card details are not collected or stored in this app.
+            </Text>
           </View>
 
           {/* Date Picker */}
@@ -257,8 +169,8 @@ const PackageBookingScreen = ({ route, navigation }) => {
         padding: 16,
         paddingBottom: Math.max(insets.bottom, 16),
       }}>
-        <TouchableOpacity style={{ backgroundColor: loading ? '#94A3B8' : '#0EA5E9', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={handleBooking} disabled={loading}>
-          {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 16 }}>Complete Booking</Text>}
+        <TouchableOpacity style={{ backgroundColor: (loading || isProcessing) ? '#94A3B8' : '#0EA5E9', paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={handleBooking} disabled={loading || isProcessing}>
+          {loading || isProcessing ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 16 }}>Continue to ARC Pay</Text>}
         </TouchableOpacity>
       </View>
     </View>

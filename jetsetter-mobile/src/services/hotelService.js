@@ -2,9 +2,6 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
 
-// TEMPORARY: Set to true to use mock data while backend is being fixed
-const USE_MOCK_DATA = true;
-
 // Create axios instance for hotel API
 const hotelApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -38,21 +35,6 @@ class HotelService {
   async searchHotels(searchParams) {
     try {
       console.log('Searching hotels with params:', searchParams);
-
-      // TEMPORARY: Use mock data if backend is not ready
-      if (USE_MOCK_DATA) {
-        console.log('Using MOCK hotel data (backend has issues)');
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-
-        return {
-          success: true,
-          hotels: this.getMockHotels(searchParams),
-          meta: {
-            source: 'mock-data-for-testing',
-            resultCount: 4,
-          },
-        };
-      }
 
       const { data } = await hotelApi.get('/hotels/search', {
         params: {
@@ -118,24 +100,6 @@ class HotelService {
     try {
       console.log('Creating hotel booking');
 
-      // TEMPORARY: Use mock booking if backend is not ready
-      if (USE_MOCK_DATA) {
-        console.log('Using MOCK booking (backend has issues)');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-
-        return {
-          success: true,
-          booking: {
-            bookingReference: this.generateMockBookingReference(),
-            status: 'CONFIRMED',
-            ...bookingData,
-            createdAt: new Date().toISOString(),
-            paymentStatus: 'PAID',
-          },
-          message: 'Mock hotel booking created successfully (backend not available)',
-        };
-      }
-
       const { data } = await hotelApi.post('/hotels/booking', bookingData);
 
       console.log('Booking created:', data);
@@ -163,24 +127,6 @@ class HotelService {
   async processPayment(paymentData) {
     try {
       console.log('Processing hotel payment');
-
-      // TEMPORARY: Use mock payment if backend is not ready
-      if (USE_MOCK_DATA) {
-        console.log('Using MOCK payment (backend has issues)');
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-
-        return {
-          success: true,
-          payment: {
-            transactionId: 'TXN' + Date.now(),
-            status: 'APPROVED',
-            amount: paymentData.amount,
-            currency: paymentData.currency,
-            processedAt: new Date().toISOString(),
-          },
-          message: 'Mock payment processed successfully',
-        };
-      }
 
       const { data } = await hotelApi.post('/hotels/payment', paymentData);
 
@@ -212,18 +158,6 @@ class HotelService {
     try {
       console.log('Modifying hotel booking:', bookingId);
 
-      if (USE_MOCK_DATA) {
-        console.log('Using MOCK modification (backend has issues)');
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        return {
-          success: true,
-          bookingId,
-          message: 'Mock booking modified successfully',
-          modifications,
-        };
-      }
-
       const { data } = await hotelApi.put(`/hotels/booking/${bookingId}`, modifications);
 
       return {
@@ -251,19 +185,6 @@ class HotelService {
   async cancelBooking(bookingId, reason = 'Customer request') {
     try {
       console.log('Cancelling hotel booking:', bookingId);
-
-      if (USE_MOCK_DATA) {
-        console.log('Using MOCK cancellation (backend has issues)');
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        return {
-          success: true,
-          bookingId,
-          cancellationId: 'CANCEL-' + Date.now(),
-          refundAmount: null,
-          message: 'Mock booking cancelled successfully',
-        };
-      }
 
       const { data } = await hotelApi.delete(`/hotels/booking/${bookingId}`, {
         data: { reason },
@@ -344,140 +265,6 @@ class HotelService {
     });
   }
 
-  /**
-   * TEMPORARY: Generate mock hotel data for testing
-   */
-  getMockHotels(searchParams) {
-    return [
-      {
-        hotelId: 'HTL001',
-        name: 'City Center Suites',
-        rating: 4.6,
-        address: '321 Downtown Street, ' + searchParams.cityCode,
-        amenities: ['wifi', 'gym', 'breakfast', 'concierge'],
-        offers: [
-          {
-            offerId: 'OFFER001',
-            roomType: 'Studio Suite',
-            price: 129.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 24h before check-in',
-          },
-          {
-            offerId: 'OFFER002',
-            roomType: 'One Bedroom Suite',
-            price: 189.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 48h before check-in',
-          },
-        ],
-        images: [
-          'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-        ],
-        location: {
-          latitude: 40.7128,
-          longitude: -74.0060,
-        },
-      },
-      {
-        hotelId: 'HTL002',
-        name: 'Luxury Boutique Inn',
-        rating: 4.8,
-        address: '456 Park Avenue, ' + searchParams.cityCode,
-        amenities: ['wifi', 'breakfast', 'parking', 'bar'],
-        offers: [
-          {
-            offerId: 'OFFER003',
-            roomType: 'Standard Room',
-            price: 149.99,
-            currency: 'USD',
-            cancellationPolicy: 'Non-refundable',
-          },
-          {
-            offerId: 'OFFER004',
-            roomType: 'Premium Room',
-            price: 229.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 24h before check-in',
-          },
-        ],
-        images: [
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
-          'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800',
-        ],
-        location: {
-          latitude: 40.7580,
-          longitude: -73.9855,
-        },
-      },
-      {
-        hotelId: 'HTL003',
-        name: 'Oceanview Resort',
-        rating: 4.3,
-        address: '789 Beach Boulevard, ' + searchParams.cityCode,
-        amenities: ['wifi', 'pool', 'beach_access', 'restaurant'],
-        offers: [
-          {
-            offerId: 'OFFER005',
-            roomType: 'Ocean View Room',
-            price: 179.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 72h before check-in',
-          },
-        ],
-        images: [
-          'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800',
-        ],
-        location: {
-          latitude: 40.7589,
-          longitude: -73.9851,
-        },
-      },
-      {
-        hotelId: 'HTL004',
-        name: 'City Center Suites',
-        rating: 4.6,
-        address: '321 Downtown Street, ' + searchParams.cityCode,
-        amenities: ['wifi', 'gym', 'breakfast', 'concierge'],
-        offers: [
-          {
-            offerId: 'OFFER006',
-            roomType: 'Studio Suite',
-            price: 129.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 24h before check-in',
-          },
-          {
-            offerId: 'OFFER007',
-            roomType: 'One Bedroom Suite',
-            price: 189.99,
-            currency: 'USD',
-            cancellationPolicy: 'Free cancellation until 48h before check-in',
-          },
-        ],
-        images: [
-          'https://images.unsplash.com/photo-1568495248636-6432b97bd949?w=800',
-        ],
-        location: {
-          latitude: 40.7306,
-          longitude: -73.9352,
-        },
-      },
-    ];
-  }
-
-  /**
-   * TEMPORARY: Generate mock booking reference for testing
-   */
-  generateMockBookingReference() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let ref = 'HTL';
-    for (let i = 0; i < 13; i++) {
-      ref += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return ref;
-  }
 }
 
 export default new HotelService();

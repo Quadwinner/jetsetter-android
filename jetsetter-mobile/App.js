@@ -7,16 +7,44 @@ import { setUser } from './src/store/slices/authSlice';
 import authService from './src/services/authService';
 import notificationService from './src/services/notificationService';
 import SplashScreen from './src/screens/SplashScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function AppContent() {
   const dispatch = useDispatch();
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Listen to auth state changes (single source of truth)
-    const unsubscribe = authService.onAuthStateChange((user) => {
-      dispatch(setUser(user));
-      setInitializing(false);
+    const unsubscribe = authService.onAuthStateChange(async (user) => {
+      if (!mounted) return;
+      
+      console.log('Auth state callback:', user ? `User: ${user.email}` : 'No user');
+      
+      if (user) {
+        dispatch(setUser(user));
+      } else {
+        // Fallback: Check AsyncStorage for persisted user data
+        try {
+          const storedUser = await AsyncStorage.getItem('user');
+          const isAuthenticated = await AsyncStorage.getItem('isAuthenticated');
+          
+          if (storedUser && isAuthenticated === 'true' && mounted) {
+            console.log('Restoring user from AsyncStorage');
+            dispatch(setUser(JSON.parse(storedUser)));
+          } else {
+            dispatch(setUser(null));
+          }
+        } catch (e) {
+          console.log('Failed to restore from AsyncStorage:', e);
+          dispatch(setUser(null));
+        }
+      }
+      
+      if (mounted) {
+        setInitializing(false);
+      }
     });
 
     // Initialize push notifications
@@ -30,7 +58,10 @@ function AppContent() {
 
     initNotifications();
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, [dispatch]);
 
   if (initializing) {

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import arcPayService from '../../services/arcPayService';
+import cruiseService from '../../services/cruiseService';
 import styles from './styles/CruiseBookingScreen.styles';
 
 const CruiseBookingScreen = ({ route, navigation }) => {
@@ -34,14 +35,6 @@ const CruiseBookingScreen = ({ route, navigation }) => {
   const [passengers, setPassengers] = useState({
     adults: [{ firstName: '', lastName: '', age: '', nationality: '' }],
     children: [],
-  });
-
-  // Payment Information
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
   });
 
   const validateStep1 = () => {
@@ -67,14 +60,6 @@ const CruiseBookingScreen = ({ route, navigation }) => {
         Alert.alert('Error', `Please complete all details for Adult ${i + 1}`);
         return false;
       }
-    }
-    return true;
-  };
-
-  const validateStep3 = () => {
-    if (!paymentInfo.cardNumber || !paymentInfo.cardHolder || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-      Alert.alert('Error', 'Please complete all payment information');
-      return false;
     }
     return true;
   };
@@ -110,90 +95,83 @@ const CruiseBookingScreen = ({ route, navigation }) => {
   };
 
   const handleBooking = async () => {
-    if (!validateStep3()) return;
+    if (!validateStep2()) return;
 
     setLoading(true);
 
     try {
       const totalAmount = calculateTotal();
-      const orderReference = `CRUISE-${Date.now()}-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
+      const orderId = `CRZ${Date.now().toString(36).toUpperCase()}`;
 
       console.log('🚢 Starting cruise booking process...');
-      console.log('Order Reference:', orderReference);
+      console.log('Order ID:', orderId);
       console.log('Total Amount:', totalAmount);
 
-      // Parse card expiry date
-      let expiryMonth, expiryYear;
-      try {
-        const expiry = arcPayService.parseExpiryDate(paymentInfo.expiryDate);
-        expiryMonth = expiry.month;
-        expiryYear = expiry.year;
-      } catch (error) {
+      // 1. Check Gateway Status (matching web app)
+      console.log('🔍 Checking payment gateway status...');
+      const gatewayCheck = await arcPayService.checkGatewayStatus();
+      
+      if (!gatewayCheck.gatewayOperational) {
         setLoading(false);
-        Alert.alert('Invalid Expiry Date', 'Please enter expiry date in MM/YY format');
+        Alert.alert('Payment Unavailable', 'Payment gateway is currently unavailable. Please try again later.');
         return;
       }
 
-      // Validate card number
-      if (!arcPayService.validateCardNumber(paymentInfo.cardNumber)) {
-        setLoading(false);
-        Alert.alert('Invalid Card', 'Please enter a valid card number');
-        return;
-      }
+      console.log('✅ Gateway is operational');
 
-      // Process payment through ARC Pay
-      console.log('💳 Processing payment through ARC Pay...');
-      const paymentResult = await arcPayService.processPayment({
+      // 2. Prepare Booking Data
+      const bookingData = {
+        cruiseId: cruise.id,
+        cruiseName: cruise.name,
+        cruiseImage: cruise.image,
+        duration: cruise.duration,
+        departure: cruise.departurePort,
+        departureDate: cruise.departureDate,
+        cruiseLine: cruise.cruiseLine,
+        ship: cruise.ship,
+        basePrice: parseFloat(cruise.price.replace(/[^0-9.]/g, '')),
+        taxesAndFees: 150,
+        portCharges: 200,
+        totalAmount,
+        contactInfo,
+        passengerDetails: passengers,
+      };
+
+      // 3. Create ArcPay Hosted Checkout (matching web app)
+      console.log('🔐 Creating ARC Pay hosted checkout...');
+      const checkoutResponse = await arcPayService.createHostedCheckout({
         amount: totalAmount,
         currency: 'USD',
-        orderReference,
+        orderId: orderId,
+        bookingType: 'cruise',
+        customerName: `${contactInfo.firstName} ${contactInfo.lastName}`,
         customerEmail: contactInfo.email,
         customerPhone: contactInfo.phone,
-        customerName: `${contactInfo.firstName} ${contactInfo.lastName}`,
-        cardNumber: paymentInfo.cardNumber,
-        cardHolder: paymentInfo.cardHolder,
-        expiryMonth,
-        expiryYear,
-        cvv: paymentInfo.cvv,
         description: `Cruise Booking - ${cruise.name}`,
+        returnUrl: `jetsetterss://payment-callback?orderId=${orderId}&type=cruise`,
+        cancelUrl: `jetsetterss://payment-cancel`,
+        bookingData: bookingData,
       });
 
-      console.log('📊 Payment Result:', paymentResult);
+      console.log('📊 Checkout Response:', checkoutResponse);
 
-      if (paymentResult.success) {
-        // Payment successful - create booking data
-        const bookingData = {
-          cruise,
-          contactInfo,
-          passengers,
-          paymentInfo: {
-            ...paymentInfo,
-            cardNumber: '****' + paymentInfo.cardNumber.slice(-4), // Mask card number
-            cvv: '***', // Mask CVV
-          },
-          totalAmount,
-          orderReference,
-          payment: {
-            transactionId: paymentResult.transactionId,
-            status: paymentResult.status,
-            authorizationCode: paymentResult.authorizationCode,
-            amount: paymentResult.amount,
-            currency: paymentResult.currency,
-            processedAt: new Date().toISOString(),
-          },
-        };
-
-        console.log('✅ Booking successful!');
+      if (checkoutResponse.success && checkoutResponse.checkoutUrl) {
         setLoading(false);
-
-        // Navigate to confirmation screen
-        navigation.navigate('CruiseConfirmation', { bookingData });
+        
+        // 4. Navigate to WebView to load the ArcPay checkoutUrl
+        console.log('🌐 Navigating to ArcPay WebView...');
+        navigation.navigate('ArcPayWebView', {
+          url: checkoutResponse.checkoutUrl,
+          bookingData,
+          orderId,
+          sessionId: checkoutResponse.sessionId,
+          totalAmount,
+        });
       } else {
-        // Payment failed
         setLoading(false);
         Alert.alert(
-          'Payment Failed',
-          paymentResult.error || 'Unable to process payment. Please check your card details and try again.'
+          'Payment Error',
+          checkoutResponse.error || 'Unable to create payment session. Please try again.'
         );
       }
     } catch (error) {
@@ -233,7 +211,7 @@ const CruiseBookingScreen = ({ route, navigation }) => {
             styles.stepLabel,
             currentStep >= step && styles.stepLabelActive
           ]}>
-            {step === 1 ? 'Contact' : step === 2 ? 'Passengers' : 'Payment'}
+            {step === 1 ? 'Contact' : step === 2 ? 'Passengers' : 'ARC Pay'}
           </Text>
         </View>
       ))}
@@ -353,51 +331,17 @@ const CruiseBookingScreen = ({ route, navigation }) => {
 
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Payment Information</Text>
-      <Text style={styles.stepSubtitle}>Secure payment processing with ARC Pay</Text>
+      <Text style={styles.stepTitle}>Review & Pay</Text>
+      <Text style={styles.stepSubtitle}>Card details are entered only on ARC Pay's secure hosted checkout.</Text>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Card Number *</Text>
-        <TextInput
-          style={styles.input}
-          value={paymentInfo.cardNumber}
-          onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardNumber: text }))}
-          placeholder="1234 5678 9012 3456"
-          keyboardType="numeric"
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Cardholder Name *</Text>
-        <TextInput
-          style={styles.input}
-          value={paymentInfo.cardHolder}
-          onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardHolder: text }))}
-          placeholder="John Doe"
-        />
-      </View>
-
-      <View style={styles.nameRow}>
-        <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-          <Text style={styles.label}>Expiry Date *</Text>
-          <TextInput
-            style={styles.input}
-            value={paymentInfo.expiryDate}
-            onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, expiryDate: text }))}
-            placeholder="MM/YY"
-          />
+      <View style={[styles.bookingSummary, { marginTop: 0, marginBottom: 16 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="lock-closed" size={22} color="#10B981" />
+          <Text style={[styles.summaryTitle, { marginBottom: 0, marginLeft: 8 }]}>Secure ARC Pay Checkout</Text>
         </View>
-        <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-          <Text style={styles.label}>CVV *</Text>
-          <TextInput
-            style={styles.input}
-            value={paymentInfo.cvv}
-            onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cvv: text }))}
-            placeholder="123"
-            keyboardType="numeric"
-            secureTextEntry
-          />
-        </View>
+        <Text style={[styles.summaryLabel, { marginTop: 10, lineHeight: 20 }]}>
+          Continue to ARC Pay to complete payment. This app does not collect or store card numbers, expiry dates, or CVV.
+        </Text>
       </View>
 
       {/* Booking Summary */}
@@ -501,7 +445,7 @@ const CruiseBookingScreen = ({ route, navigation }) => {
           ) : (
             <>
               <Text style={styles.nextButtonText}>
-                {currentStep === 3 ? 'Complete Booking' : 'Next'}
+                {currentStep === 3 ? 'Continue to ARC Pay' : 'Next'}
               </Text>
               <Ionicons name="arrow-forward" size={20} color="#fff" />
             </>

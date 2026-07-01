@@ -1,303 +1,366 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F9FAFB',
   },
 
-  // Hero Section
-  hero: {
-    height: 320,
+  // Enhanced Hero Section matching JETSET13
+  heroContainer: {
     width: '100%',
-  },
-  heroImage: {
-    resizeMode: 'cover',
+    height: 220,
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   heroOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 80,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.75)', // Bright overlay instead of dark
   },
-  heroTitle: {
-    fontSize: 32,
+  heroGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroTextContainer: {
+    paddingHorizontal: 20,
+    marginTop: -80, // Push up slightly
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  heroSuperTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  heroSuperTitleLine: {
+    height: 2,
+    width: 40,
+    backgroundColor: '#055B75',
+    marginRight: 12,
+  },
+  heroSuperTitle: {
+    color: '#055B75',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  heroTitleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  heroTitleDark: {
+    fontSize: 42,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#111827', // text-gray-900
     textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: 0.5,
-    lineHeight: 40,
+    lineHeight: 48,
+  },
+  heroTitleHighlight: {
+    fontSize: 42,
+    fontWeight: '800',
+    color: '#055B75', // teal
+    textAlign: 'center',
+    lineHeight: 48,
   },
   heroSubtitle: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#4B5563', // text-gray-600
     textAlign: 'center',
-    opacity: 0.95,
     lineHeight: 24,
     paddingHorizontal: 20,
+    fontWeight: '500',
   },
 
-  // Search Card
-  searchCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginTop: -70,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-
-  // Trip Type Tabs
-  tripTypeTabs: {
+  // Trip Type Selector
+  tripTypeContainer: {
+    alignSelf: 'center',
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    overflow: 'hidden',
+    width: 240,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 20,
+    zIndex: 5,
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    borderRadius: 10,
+    backgroundColor: '#F3F4F6', // bg-gray-100
   },
   activeTab: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#0EA5E9',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: '#055B75',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#4B5563', // text-gray-600
   },
   activeTabText: {
-    color: '#0EA5E9',
-    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // Main Search Form Card
+  searchCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    zIndex: 5,
   },
 
   // Form Groups
   formGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
+    zIndex: 1,
+  },
+  rowGroup: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  rowItem: {
+    flex: 1,
   },
   label: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 10,
+    fontWeight: '600',
+    color: '#4B5563', // text-gray-600
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 54,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // border-gray-200
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
   },
-  icon: {
-    marginRight: 12,
+  iconRight: {
+    marginLeft: 8,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1E293B',
-    fontWeight: '500',
+    color: '#1F2937', // text-gray-800
   },
   placeholderText: {
-    color: '#94A3B8',
+    color: '#9CA3AF',
   },
 
-  // Suggestions
+  // Suggestions - inline, renders below the input without overlapping
   suggestions: {
-    marginTop: 10,
     backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
     maxHeight: 220,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 8,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  suggestions: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    maxHeight: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 5,
+    elevation: 6,
+    position: 'absolute',
+    top: 76,
+    left: 0,
+    right: 0,
+    zIndex: 100,
   },
   suggestionItem: {
-    padding: 16,
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F3F4F6',
   },
   suggestionCity: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 4,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
   },
   suggestionCode: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-
-  // Date Row
-  dateRow: {
+    fontSize: 12,
+    color: '#6B7280',
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 
   // Search Button
   searchButton: {
-    backgroundColor: '#0EA5E9',
+    backgroundColor: '#055B75', // hover #044A5F
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginTop: 12,
-    shadowColor: '#0EA5E9',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   searchButtonDisabled: {
-    backgroundColor: '#94A3B8',
-    opacity: 0.7,
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0.1,
   },
   searchButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     marginLeft: 8,
   },
 
-  // Sections
-  section: {
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 20,
-    letterSpacing: 0.3,
-  },
-
-  // Routes Grid
-  routesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  routeCard: {
-    width: (width - 52) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  routeInfo: {
+  // Special Fares Row
+  specialFaresContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 6,
+    flexWrap: 'wrap',
+    marginTop: 16,
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  routeFrom: {
+  specialFaresLabel: {
+    color: '#055B75',
+    fontWeight: '600',
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1E293B',
-    flex: 1,
   },
-  routeTo: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1E293B',
-    flex: 1,
-    textAlign: 'right',
-  },
-  routePrice: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#0EA5E9',
-  },
-
-  // Fares Tags
   faresTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   fareTag: {
-    backgroundColor: '#DBEAFE',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 25,
-    shadowColor: '#0EA5E9',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#055B75',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  fareTagActive: {
+    backgroundColor: '#055B75',
   },
   fareTagText: {
-    fontSize: 14,
-    color: '#0EA5E9',
-    fontWeight: '700',
+    fontSize: 13,
+    color: '#055B75',
+    fontWeight: '500',
+  },
+  fareTagTextActive: {
+    color: '#FFFFFF',
   },
 
-  // Features Grid
+  // Generic Section
+  section: {
+    paddingHorizontal: 16,
+    paddingTop: 32,
+    paddingBottom: 16,
+  },
+  sectionHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  sectionBadge: {
+    backgroundColor: '#E0F7FA',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  sectionBadgeText: {
+    color: '#055B75',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    color: '#4B5563',
+    textAlign: 'center',
+    paddingHorizontal: 10,
+    lineHeight: 24,
+  },
+
+  // Features Grid (Why Book With Us)
   featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 40,
   },
   featureCard: {
-    width: (width - 52) / 2,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
+    padding: 24,
     marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#0F172A',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    alignItems: 'flex-start',
+  },
+  featureIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: '#E0F7FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   featureTitle: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 14,
-    marginBottom: 6,
-    textAlign: 'center',
-    lineHeight: 20,
+    color: '#1F2937',
+    marginBottom: 8,
   },
   featureDesc: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#4B5563',
+    lineHeight: 22,
   },
 });

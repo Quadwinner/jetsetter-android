@@ -1,233 +1,251 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  Alert,
-  RefreshControl,
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  FlatList, 
+  TouchableOpacity, 
+  Image, 
+  ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import styles from './styles/CruiseResultsScreen.styles';
+import cruiseService from '../../services/cruiseService';
 
-const CruiseResultsScreen = ({ route, navigation }) => {
-  const { cruises, searchParams } = route.params;
-  const [refreshing, setRefreshing] = useState(false);
-  const [sortBy, setSortBy] = useState('price'); // price, duration, rating
-  const [filteredCruises, setFilteredCruises] = useState(cruises);
+export default function CruiseResultsScreen({ route, navigation }) {
+  const { cruises: initialCruises, searchParams } = route.params;
+  const [cruises, setCruises] = useState(initialCruises || []);
+  const [loading, setLoading] = useState(!initialCruises?.length);
 
-  const sortCruises = (cruiseList, sortType) => {
-    const sorted = [...cruiseList].sort((a, b) => {
-      switch (sortType) {
-        case 'price':
-          return a.priceValue - b.priceValue;
-        case 'duration':
-          return parseInt(a.duration) - parseInt(b.duration);
-        case 'rating':
-          return b.rating - a.rating;
-        default:
-          return 0;
+  useEffect(() => {
+    if (!initialCruises?.length) {
+      fetchCruises();
+    }
+  }, []);
+
+  const fetchCruises = async () => {
+    try {
+      const response = await cruiseService.searchCruises(searchParams || {});
+      if (response.success && response.cruises) {
+        setCruises(response.cruises);
       }
-    });
-    setFilteredCruises(sorted);
-  };
-
-  const handleSort = (sortType) => {
-    setSortBy(sortType);
-    sortCruises(filteredCruises, sortType);
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    // Simulate refresh - in real app, would re-fetch data
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  };
-
-  const handleSelectCruise = (cruise) => {
-    navigation.navigate('CruiseDetails', { cruise });
+    } catch (error) {
+      console.error('Error fetching cruises:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderCruiseCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.cruiseCard}
-      onPress={() => handleSelectCruise(item)}
+    <TouchableOpacity 
+      style={styles.card} 
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate('CruiseDetails', { cruise: item })}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={styles.cruiseImage}
+      <Image 
+        source={{ uri: item.image || 'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=800' }} 
+        style={styles.cardImage} 
         resizeMode="cover"
       />
       
-      <View style={styles.ratingBadge}>
-        <Ionicons name="star" size={12} color="#ffc107" />
-        <Text style={styles.ratingText}>{item.rating}</Text>
-      </View>
-
-      <View style={styles.cruiseContent}>
-        <View style={styles.cruiseHeader}>
-          <Text style={styles.cruiseName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.cruisePrice}>{item.price}</Text>
-        </View>
-
-        <Text style={styles.cruiseLine}>{item.cruiseLine}</Text>
+      <View style={styles.cardBody}>
+        <Text style={styles.cruiseLine}>
+          {item.cruiseLine || item.cruise_line} • {item.ship}
+        </Text>
+        <Text style={styles.cruiseName}>
+          {item.name || `${item.duration} Night ${item.destinations?.[0] || 'Cruise'}`}
+        </Text>
         
-        <View style={styles.cruiseDetails}>
-          <View style={styles.detailItem}>
-            <Ionicons name="boat" size={16} color="#666" />
-            <Text style={styles.detailText}>{item.ship}</Text>
-          </View>
-          
-          <View style={styles.detailItem}>
-            <Ionicons name="time" size={16} color="#666" />
-            <Text style={styles.detailText}>{item.duration}</Text>
-          </View>
-          
-          <View style={styles.detailItem}>
-            <Ionicons name="location" size={16} color="#666" />
-            <Text style={styles.detailText}>{item.departurePort}</Text>
-          </View>
+        <View style={styles.detailsRow}>
+          <Ionicons name="location-outline" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>
+            Departs: {item.departurePort || item.departure_port || 'Various Ports'}
+          </Text>
+        </View>
+        
+        <View style={styles.detailsRow}>
+          <Ionicons name="calendar-outline" size={16} color="#6B7280" />
+          <Text style={styles.detailText}>
+            {item.departureDate || item.departure_date || 'Select Dates'}
+          </Text>
         </View>
 
-        <View style={styles.destinationsContainer}>
-          <Text style={styles.destinationsLabel}>Destinations:</Text>
-          <View style={styles.destinations}>
-            {item.destinations.slice(0, 3).map((dest, index) => (
-              <Text key={index} style={styles.destination}>
-                {dest}{index < Math.min(item.destinations.length, 3) - 1 ? ', ' : ''}
-              </Text>
-            ))}
-            {item.destinations.length > 3 && (
-              <Text style={styles.destination}>+{item.destinations.length - 3} more</Text>
-            )}
+        <View style={styles.footerRow}>
+          <View>
+            <Text style={styles.priceLabel}>Starting from</Text>
+            <Text style={styles.priceText}>
+              ${item.priceValue || item.price_per_person || 699}
+            </Text>
+          </View>
+          <View style={styles.viewButton}>
+            <Text style={styles.viewButtonText}>View Details</Text>
           </View>
         </View>
-
-        <View style={styles.amenitiesContainer}>
-          {item.amenities.slice(0, 3).map((amenity, index) => (
-            <View key={index} style={styles.amenityTag}>
-              <Text style={styles.amenityText}>{amenity}</Text>
-            </View>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.bookButton}
-          onPress={() => handleSelectCruise(item)}
-        >
-          <Text style={styles.bookButtonText}>View Details</Text>
-          <Ionicons name="arrow-forward" size={16} color="#fff" />
-        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.searchSummary}>
-        <Text style={styles.resultsCount}>
-          {filteredCruises.length} cruise{filteredCruises.length !== 1 ? 's' : ''} found
-        </Text>
-        {searchParams.destination && (
-          <Text style={styles.searchCriteria}>
-            Destination: {searchParams.destination}
-          </Text>
-        )}
-        {searchParams.departurePort && (
-          <Text style={styles.searchCriteria}>
-            Port: {searchParams.departurePort}
-          </Text>
-        )}
-        {searchParams.cruiseLine && (
-          <Text style={styles.searchCriteria}>
-            Line: {searchParams.cruiseLine}
-          </Text>
-        )}
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#055B75" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Search Results</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>Sort by:</Text>
-        <View style={styles.sortButtons}>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'price' && styles.sortButtonActive]}
-            onPress={() => handleSort('price')}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#055B75" />
+          <Text style={styles.loadingText}>Searching best routes...</Text>
+        </View>
+      ) : cruises.length === 0 ? (
+        <View style={styles.center}>
+          <Ionicons name="boat-outline" size={64} color="#D1D5DB" />
+          <Text style={styles.emptyText}>No cruises found matching your criteria.</Text>
+          <TouchableOpacity 
+            style={styles.modifyButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text style={[styles.sortButtonText, sortBy === 'price' && styles.sortButtonTextActive]}>
-              Price
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'duration' && styles.sortButtonActive]}
-            onPress={() => handleSort('duration')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'duration' && styles.sortButtonTextActive]}>
-              Duration
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'rating' && styles.sortButtonActive]}
-            onPress={() => handleSort('rating')}
-          >
-            <Text style={[styles.sortButtonText, sortBy === 'rating' && styles.sortButtonTextActive]}>
-              Rating
-            </Text>
+            <Text style={styles.modifyButtonText}>Modify Search</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </View>
+      ) : (
+        <FlatList
+          data={cruises}
+          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          renderItem={renderCruiseCard}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </SafeAreaView>
   );
+}
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="boat-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyTitle}>No Cruises Found</Text>
-      <Text style={styles.emptyMessage}>
-        Try adjusting your search criteria or browse our popular destinations.
-      </Text>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backButtonText}>Modify Search</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#0066b2" />
-          <Text style={styles.backButtonText}>Back to Search</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={filteredCruises}
-        renderItem={renderCruiseCard}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
-  );
-};
-
-export default CruiseResultsScreen;
-
-
-
-
-
-
+const styles = StyleSheet.create({
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F9FAFB' 
+  },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 16, 
+    paddingBottom: 16, 
+    backgroundColor: '#FFF', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#E5E7EB' 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#1F2937' 
+  },
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: { 
+    marginTop: 16, 
+    color: '#6B7280', 
+    fontSize: 16 
+  },
+  emptyText: { 
+    marginTop: 16, 
+    color: '#6B7280', 
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  modifyButton: {
+    marginTop: 20,
+    backgroundColor: '#65B3CF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  modifyButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  listContainer: { 
+    padding: 16,
+    paddingBottom: 32,
+  },
+  card: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 16, 
+    overflow: 'hidden', 
+    marginBottom: 20, 
+    elevation: 4, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    shadowOffset: { width: 0, height: 4 } 
+  },
+  cardImage: { 
+    width: '100%', 
+    height: 200 
+  },
+  cardBody: { 
+    padding: 16 
+  },
+  cruiseLine: { 
+    color: '#055B75', 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    textTransform: 'uppercase', 
+    letterSpacing: 1, 
+    marginBottom: 4 
+  },
+  cruiseName: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#1F2937', 
+    marginBottom: 12 
+  },
+  detailsRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 6 
+  },
+  detailText: { 
+    color: '#4B5563', 
+    fontSize: 14, 
+    marginLeft: 6 
+  },
+  footerRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-end', 
+    marginTop: 16, 
+    paddingTop: 16, 
+    borderTopWidth: 1, 
+    borderTopColor: '#F3F4F6' 
+  },
+  priceLabel: { 
+    color: '#6B7280', 
+    fontSize: 12 
+  },
+  priceText: { 
+    fontSize: 26, 
+    fontWeight: '900', 
+    color: '#055B75' 
+  },
+  viewButton: { 
+    backgroundColor: '#65B3CF', 
+    paddingHorizontal: 20, 
+    paddingVertical: 10, 
+    borderRadius: 8 
+  },
+  viewButtonText: { 
+    color: '#FFF', 
+    fontWeight: 'bold', 
+    fontSize: 14 
+  },
+});

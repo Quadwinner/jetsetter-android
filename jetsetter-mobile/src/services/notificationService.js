@@ -18,6 +18,9 @@ class NotificationService {
   }
 
   async registerForPushNotifications() {
+    // Skip push notifications on web - requires vapidPublicKey config
+    if (Platform.OS === 'web') return null;
+
     if (!Device.isDevice) {
       console.warn('Push notifications only work on physical devices');
       return null;

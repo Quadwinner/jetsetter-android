@@ -24,6 +24,7 @@ import HotelResultsScreen from '../screens/booking/HotelResultsScreen';
 import HotelDetailsScreen from '../screens/booking/HotelDetailsScreen';
 import HotelPaymentScreen from '../screens/booking/HotelPaymentScreen';
 import HotelConfirmationScreen from '../screens/booking/HotelConfirmationScreen';
+import CruiseHomeScreen from '../screens/booking/CruiseHomeScreen';
 import CruiseSearchScreen from '../screens/booking/CruiseSearchScreen';
 import CruiseResultsScreen from '../screens/booking/CruiseResultsScreen';
 import CruiseDetailsScreen from '../screens/booking/CruiseDetailsScreen';
@@ -37,6 +38,7 @@ import MyTripsScreen from '../screens/trips/MyTripsScreen';
 import BookingDetailScreen from '../screens/trips/BookingDetailScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import NewRequestScreen from '../screens/requests/NewRequestScreen';
+import RequestScreen from '../screens/requests/RequestScreen';
 import InquiryDetailScreen from '../screens/requests/InquiryDetailScreen';
 import BookingInfoFormScreen from '../screens/booking/BookingInfoFormScreen';
 
@@ -44,6 +46,13 @@ import BookingInfoFormScreen from '../screens/booking/BookingInfoFormScreen';
 import ArcPaymentScreen from '../screens/payment/ArcPaymentScreen';
 import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
 import PaymentFailedScreen from '../screens/payment/PaymentFailedScreen';
+import ArcPayWebView from '../screens/payment/ArcPayWebView';
+
+// New Flight Screens
+import FlightBookingScreen from '../screens/booking/FlightBookingScreen';
+import FlightCreateOrderScreen from '../screens/booking/FlightCreateOrderScreen';
+import FlightSuccessScreen from '../screens/booking/FlightSuccessScreen';
+import ManageBookingScreen from '../screens/booking/ManageBookingScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -71,11 +80,11 @@ const MainTabs = () => (
     }}
   >
     <Tab.Screen
-      name="Home"
+      name="Cruise"
       component={HomeScreen}
       options={{
-        tabBarLabel: 'Home',
-        tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
+        tabBarLabel: 'Cruise',
+        tabBarIcon: ({ color }) => <Ionicons name="boat" size={24} color={color} />,
       }}
     />
     <Tab.Screen
@@ -120,7 +129,11 @@ const MainStack = () => (
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="FlightResults" component={FlightResultsScreen} />
     <Stack.Screen name="FlightPayment" component={FlightPaymentScreen} />
+    <Stack.Screen name="FlightBooking" component={FlightBookingScreen} />
+    <Stack.Screen name="FlightCreateOrder" component={FlightCreateOrderScreen} options={{ gestureEnabled: false }} />
+    <Stack.Screen name="FlightSuccess" component={FlightSuccessScreen} options={{ gestureEnabled: false }} />
     <Stack.Screen name="FlightConfirmation" component={FlightConfirmationScreen} />
+    <Stack.Screen name="ManageBooking" component={ManageBookingScreen} />
     <Stack.Screen name="HotelResults" component={HotelResultsScreen} />
     <Stack.Screen name="HotelDetails" component={HotelDetailsScreen} />
     <Stack.Screen name="HotelPayment" component={HotelPaymentScreen} />
@@ -140,6 +153,11 @@ const MainStack = () => (
       options={{ gestureEnabled: false }} 
     />
     <Stack.Screen 
+      name="ArcPayWebView" 
+      component={ArcPayWebView} 
+      options={{ gestureEnabled: false }} 
+    />
+    <Stack.Screen 
       name="PaymentSuccess" 
       component={PaymentSuccessScreen} 
       options={{ gestureEnabled: false }} 
@@ -154,14 +172,9 @@ const MainStack = () => (
       component={BookingDetailScreen} 
     />
     {/* Requests & Inquiries */}
-    <Stack.Screen 
-      name="NewRequest" 
-      component={NewRequestScreen} 
-    />
-    <Stack.Screen 
-      name="InquiryDetail" 
-      component={InquiryDetailScreen} 
-    />
+    <Stack.Screen name="NewRequest" component={NewRequestScreen} />
+    <Stack.Screen name="Request" component={RequestScreen} />
+    <Stack.Screen name="InquiryDetail" component={InquiryDetailScreen} />
     <Stack.Screen 
       name="BookingInfoForm" 
       component={BookingInfoFormScreen}
@@ -210,10 +223,23 @@ const AppNavigator = () => {
     return <SplashScreen />;
   }
 
+  // Deep linking configuration for payment callbacks
+  const linking = {
+    prefixes: ['jetsettermobile://', 'jetsetterss://', 'https://jetsetterss.com'],
+    config: {
+      screens: {
+        FlightCreateOrder: 'payment/callback',
+        PaymentCallback: 'payment-callback',
+        PaymentCancel: 'payment-cancel',
+      },
+    },
+  };
+
   return (
     <NavigationContainer
       ref={navigationRef}
       key={isAuthenticated ? 'authenticated' : 'unauthenticated'}
+      linking={linking}
     >
       {!hasSeenOnboarding ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>

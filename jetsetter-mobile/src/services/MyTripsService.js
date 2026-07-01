@@ -2,24 +2,33 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
 import supabase from './supabase';
+import { auth } from './firebase';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
 const myTripsApi = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-myTripsApi.interceptors.request.use(async (config) => {
-  const token =
-    (await AsyncStorage.getItem('token')) ||
-    (await AsyncStorage.getItem('supabase_token')) ||
+// Get Firebase ID token for auth
+const getFirebaseToken = async () => {
+  try {
+    if (auth.currentUser) {
+      return await auth.currentUser.getIdToken();
+    }
+  } catch (_) {}
+  // Fallback to stored tokens
+  return (
     (await AsyncStorage.getItem('authToken')) ||
-    (await AsyncStorage.getItem('auth_token'));
+    (await AsyncStorage.getItem('token')) ||
+    null
+  );
+};
 
+myTripsApi.interceptors.request.use(async (config) => {
+  const token = await getFirebaseToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -34,70 +43,59 @@ class MyTripsService {
    */
   async getMyInquiries() {
     try {
-      console.log('📡 Fetching inquiries from API...');
-      const response = await myTripsApi.get('/inquiries');
-      console.log('✅ Got inquiries from API:', response.data?.data?.length || 0);
-      return response.data;
+      console.log('📡 Fetching inquiries from Supabase...');
+      return await this.getInquiriesFromSupabase();
     } catch (error) {
-      console.error('❌ API error fetching inquiries:', error.response?.status, error.response?.statusText);
-      
-      // If API fails (403, 404, 500), fetch directly from Supabase
-      if (error.response?.status === 403 || error.response?.status === 404 || error.response?.status >= 500) {
-        console.log('⚠️ API unavailable, fetching from Supabase...');
-        return await this.getInquiriesFromSupabase();
-      }
-      
-      throw this.handleError(error);
+      console.error('❌ Error fetching inquiries:', error.message);
+      return { success: true, data: [] };
     }
   }
 
-  /**
-   * Fetch inquiries directly from Supabase (fallback)
-   */
   async getInquiriesFromSupabase() {
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Build query - filter by user email or user_id if available
+      // Get current user email from Firebase auth
+      const { auth } = require('./firebase');
+      const currentUser = auth.currentUser;
+
+      if (!currentUser?.email) {
+        console.log('No logged in user, returning empty inquiries');
+        return { success: true, data: [] };
+      }
+
+      const userEmail = currentUser.email;
+      console.log('📡 Fetching inquiries for user:', userEmail);
+
+      // Also try to get Supabase user ID for users who signed up via web
+      let supabaseUserId = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        supabaseUserId = user?.id;
+      } catch (_) {}
+
       let query = supabase
         .from('inquiries')
-        .select('*')
+        .select('*, quotes(*)')
         .order('created_at', { ascending: false });
-      
-      // If user is logged in, filter by user_id or email
-      if (user?.id) {
-        query = query.eq('user_id', user.id);
+
+      // Filter by email OR supabase user_id to catch both web and mobile users
+      if (supabaseUserId) {
+        query = query.or(`customer_email.eq.${userEmail},user_id.eq.${supabaseUserId}`);
       } else {
-        // If no user, try to get email from AsyncStorage and filter by customer_email
-        const userEmail = await AsyncStorage.getItem('userEmail') || 
-                         await AsyncStorage.getItem('email');
-        if (userEmail) {
-          query = query.eq('customer_email', userEmail);
-        }
+        query = query.eq('customer_email', userEmail);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
         console.error('❌ Supabase query error:', error);
-        throw new Error(error.message || 'Failed to fetch inquiries from database');
+        return { success: true, data: [] };
       }
-      
+
       console.log('✅ Got inquiries from Supabase:', data?.length || 0);
-      
-      return {
-        success: true,
-        data: data || [],
-        message: 'Inquiries loaded successfully',
-      };
+      return { success: true, data: data || [] };
     } catch (error) {
       console.error('❌ Supabase fetch error:', error);
-      return {
-        success: false,
-        data: [],
-        message: error.message || 'Failed to load inquiries',
-      };
+      return { success: true, data: [] };
     }
   }
 
@@ -107,11 +105,26 @@ class MyTripsService {
    */
   async getMyBookings() {
     try {
-      const response = await myTripsApi.get('/bookings');
-      return response.data;
+      const { auth } = require('./firebase');
+      const currentUser = auth.currentUser;
+      if (!currentUser?.email) return { success: true, data: [] };
+
+      // Fetch cruise bookings from Supabase by email
+      const { data, error } = await supabase
+        .from('cruise_bookings')
+        .select('*')
+        .eq('customer_email', currentUser.email)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Get bookings error:', error.message);
+        return { success: true, data: [] };
+      }
+
+      return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Get bookings error:', error);
-      throw this.handleError(error);
+      console.error('Get bookings error:', error.message);
+      return { success: true, data: [] };
     }
   }
 

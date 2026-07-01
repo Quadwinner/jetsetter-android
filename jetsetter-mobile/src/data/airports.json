@@ -119,6 +119,114 @@
       "name": "Istanbul Airport",
       "city": "Istanbul",
       "country": "Turkey"
+    },
+    {
+      "code": "GOI",
+      "name": "Goa International Airport",
+      "city": "Goa",
+      "country": "India"
+    },
+    {
+      "code": "AMD",
+      "name": "Sardar Vallabhbhai Patel International Airport",
+      "city": "Ahmedabad",
+      "country": "India"
+    },
+    {
+      "code": "PNQ",
+      "name": "Pune Airport",
+      "city": "Pune",
+      "country": "India"
+    },
+    {
+      "code": "JAI",
+      "name": "Jaipur International Airport",
+      "city": "Jaipur",
+      "country": "India"
+    },
+    {
+      "code": "LKO",
+      "name": "Chaudhary Charan Singh International Airport",
+      "city": "Lucknow",
+      "country": "India"
+    },
+    {
+      "code": "COK",
+      "name": "Cochin International Airport",
+      "city": "Kochi",
+      "country": "India"
+    },
+    {
+      "code": "TRV",
+      "name": "Trivandrum International Airport",
+      "city": "Thiruvananthapuram",
+      "country": "India"
+    },
+    {
+      "code": "IXC",
+      "name": "Chandigarh Airport",
+      "city": "Chandigarh",
+      "country": "India"
+    },
+    {
+      "code": "ATQ",
+      "name": "Sri Guru Ram Dass Jee International Airport",
+      "city": "Amritsar",
+      "country": "India"
+    },
+    {
+      "code": "ORD",
+      "name": "O'Hare International Airport",
+      "city": "Chicago",
+      "country": "United States"
+    },
+    {
+      "code": "MIA",
+      "name": "Miami International Airport",
+      "city": "Miami",
+      "country": "United States"
+    },
+    {
+      "code": "SFO",
+      "name": "San Francisco International Airport",
+      "city": "San Francisco",
+      "country": "United States"
+    },
+    {
+      "code": "SEA",
+      "name": "Seattle-Tacoma International Airport",
+      "city": "Seattle",
+      "country": "United States"
+    },
+    {
+      "code": "BOS",
+      "name": "Logan International Airport",
+      "city": "Boston",
+      "country": "United States"
+    },
+    {
+      "code": "DFW",
+      "name": "Dallas/Fort Worth International Airport",
+      "city": "Dallas",
+      "country": "United States"
+    },
+    {
+      "code": "ATL",
+      "name": "Hartsfield-Jackson Atlanta International Airport",
+      "city": "Atlanta",
+      "country": "United States"
+    },
+    {
+      "code": "LAS",
+      "name": "Harry Reid International Airport",
+      "city": "Las Vegas",
+      "country": "United States"
+    },
+    {
+      "code": "MCO",
+      "name": "Orlando International Airport",
+      "city": "Orlando",
+      "country": "United States"
     }
   ]
 }

@@ -243,35 +243,65 @@ class AuthService {
 
   /**
    * Check if user is authenticated
+   * Returns a promise that resolves when auth state is determined
    */
   async isAuthenticated() {
-    try {
-      // Use Firebase auth state as the single source of truth
-      return !!auth.currentUser;
-    } catch (error) {
-      console.error('Check authentication error:', error);
-      return false;
-    }
+    return new Promise((resolve) => {
+      // If currentUser is already available, return immediately
+      if (auth.currentUser) {
+        resolve(true);
+        return;
+      }
+      
+      // Otherwise, wait for auth state to be determined (with timeout)
+      const timeout = setTimeout(() => {
+        unsubscribe();
+        resolve(false);
+      }, 3000);
+      
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        clearTimeout(timeout);
+        unsubscribe();
+        resolve(!!user);
+      });
+    });
   }
 
   /**
    * Listen to auth state changes
+   * The callback is called after Firebase has restored the persisted session
    */
   onAuthStateChange(callback) {
     return onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
+      
       if (user) {
         const userData = {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
+          photoURL: user.photoURL || null,
           emailVerified: user.emailVerified,
         };
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('isAuthenticated', 'true');
+        
+        // Persist to AsyncStorage for backup
+        try {
+          await AsyncStorage.setItem('user', JSON.stringify(userData));
+          await AsyncStorage.setItem('isAuthenticated', 'true');
+        } catch (e) {
+          console.log('Failed to save to AsyncStorage:', e);
+        }
+        
         callback(userData);
       } else {
-        await AsyncStorage.removeItem('user');
-        await AsyncStorage.setItem('isAuthenticated', 'false');
+        // Clear AsyncStorage
+        try {
+          await AsyncStorage.removeItem('user');
+          await AsyncStorage.setItem('isAuthenticated', 'false');
+        } catch (e) {
+          console.log('Failed to clear AsyncStorage:', e);
+        }
+        
         callback(null);
       }
     });

@@ -40,14 +40,6 @@ const FlightPaymentScreen = ({ route, navigation }) => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
 
-  // Payment Information
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
-  });
-
   const updateTraveler = (index, field, value) => {
     const updatedTravelers = [...travelers];
     updatedTravelers[index][field] = value;
@@ -358,15 +350,15 @@ const FlightPaymentScreen = ({ route, navigation }) => {
           onPress={handlePayment}
           disabled={loading || isProcessing}
         >
-          {loading ? (
+          {loading || isProcessing ? (
             <>
               <ActivityIndicator size="small" color="#fff" />
               <Text style={styles.bookButtonText}>Processing...</Text>
             </>
           ) : (
             <>
-              <Text style={styles.bookButtonText}>Complete Booking</Text>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Text style={styles.bookButtonText}>Continue to ARC Pay</Text>
+              <Ionicons name="lock-closed" size={20} color="#fff" />
             </>
           )}
         </TouchableOpacity>

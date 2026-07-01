@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://www.jetsetterss.com/api', // Production API URL
+  BASE_URL: 'https://www.jetsetterss.com/api',
   TIMEOUT: 30000,
 };
 
@@ -34,8 +34,7 @@ export const ARC_PAY_CONFIG = {
   DEV_PAYMENT_URL: 'https://prod-six-phi.vercel.app/api/payments',
   // Payment page URL (for reference - backend provides this)
   PAYMENT_PAGE_BASE: 'https://na.gateway.mastercard.com/checkout/pay',
-  // Test mode flag
-  TEST_MODE: true,
+  TEST_MODE: false,
 };
 
 // App Configuration
@@ -45,16 +44,19 @@ export const APP_CONFIG = {
   ENVIRONMENT: process.env.APP_ENV || 'development',
 };
 
-// Theme Colors
+// Theme Colors — Jetsetters brand (teal)
 export const COLORS = {
-  PRIMARY: '#1e40af',
-  PRIMARY_LIGHT: '#3b82f6',
+  PRIMARY: '#055B75',
+  PRIMARY_DARK: '#034457',
+  PRIMARY_LIGHT: '#0890BC',
+  ACCENT: '#0890BC',
+  SKY: '#65B3CF',
   SECONDARY: '#f59e0b',
   SUCCESS: '#10b981',
   ERROR: '#ef4444',
   WARNING: '#f59e0b',
-  INFO: '#3b82f6',
-  LIGHT: '#f8fafc',
+  INFO: '#0890BC',
+  LIGHT: '#F1FBFD',
   DARK: '#1e293b',
   WHITE: '#ffffff',
   BLACK: '#000000',

@@ -3,26 +3,20 @@ import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityInd
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import hotelService from '../../services/hotelService';
-import arcPayService from '../../services/arcPayService';
+import quoteService from '../../services/quoteService';
+import useArcPayment from '../../utils/useArcPayment';
 import styles from './styles/HotelPaymentScreen.styles';
 
 const HotelPaymentScreen = ({ route, navigation }) => {
   const { hotel, selectedOffer, searchParams, nights } = route.params;
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
+  const { payForHotel, isProcessing } = useArcPayment();
   const [guestDetails, setGuestDetails] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-  });
-
-  // Payment Information
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
   });
 
   const totalPrice = selectedOffer.price * nights;
@@ -41,12 +35,6 @@ const HotelPaymentScreen = ({ route, navigation }) => {
       return false;
     }
 
-    // Validate payment information
-    if (!paymentInfo.cardNumber || !paymentInfo.cardHolder || !paymentInfo.expiryDate || !paymentInfo.cvv) {
-      Alert.alert('Missing Payment', 'Please complete all payment information');
-      return false;
-    }
-
     return true;
   };
 
@@ -56,96 +44,49 @@ const HotelPaymentScreen = ({ route, navigation }) => {
     setLoading(true);
 
     try {
-      const orderReference = `HOTEL-${Date.now()}-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
-
-      console.log('🏨 Starting hotel booking process...');
-      console.log('Order Reference:', orderReference);
+      console.log('🏨 Starting hotel booking via ARC Pay quote flow...');
       console.log('Total Amount:', totalPrice);
 
-      // Parse card expiry date
-      let expiryMonth, expiryYear;
-      try {
-        const expiry = arcPayService.parseExpiryDate(paymentInfo.expiryDate);
-        expiryMonth = expiry.month;
-        expiryYear = expiry.year;
-      } catch (error) {
-        setLoading(false);
-        Alert.alert('Invalid Expiry Date', 'Please enter expiry date in MM/YY format');
-        return;
-      }
-
-      // Validate card number
-      if (!arcPayService.validateCardNumber(paymentInfo.cardNumber)) {
-        setLoading(false);
-        Alert.alert('Invalid Card', 'Please enter a valid card number');
-        return;
-      }
-
-      // Process payment through ARC Pay
-      console.log('💳 Processing payment through ARC Pay...');
-      const paymentResult = await arcPayService.processPayment({
-        amount: totalPrice,
-        currency: selectedOffer.currency || 'USD',
-        orderReference,
+      const currency = selectedOffer.currency || 'USD';
+      const quote = await quoteService.createQuoteForBooking({
+        bookingType: 'hotel',
+        title: `Hotel Reservation - ${hotel.name}`,
+        description: `${selectedOffer.roomType} for ${nights} night${nights > 1 ? 's' : ''}`,
+        totalAmount: totalPrice,
+        currency,
+        breakdown: {
+          room_rate: selectedOffer.price,
+          nights,
+          taxes: 0,
+          fees: 0,
+        },
+        bookingDetails: {
+          hotel,
+          selected_offer: selectedOffer,
+          search_params: searchParams,
+          nights,
+          guest_details: guestDetails,
+        },
         customerEmail: guestDetails.email,
-        customerPhone: guestDetails.phone,
         customerName: `${guestDetails.firstName} ${guestDetails.lastName}`,
-        cardNumber: paymentInfo.cardNumber,
-        cardHolder: paymentInfo.cardHolder,
-        expiryMonth,
-        expiryYear,
-        cvv: paymentInfo.cvv,
-        description: `Hotel Booking - ${hotel.name}`,
+        customerPhone: guestDetails.phone,
       });
 
-      console.log('📊 Payment Result:', paymentResult);
-
-      if (!paymentResult.success) {
-        setLoading(false);
-        Alert.alert(
-          'Payment Failed',
-          paymentResult.error || 'Unable to process payment. Please check your card details and try again.'
-        );
-        return;
+      const quoteId = quote?.id;
+      if (!quoteId) {
+        throw new Error('Quote ID missing from server response');
       }
-
-      // Create booking only after successful payment
-      const bookingResult = await hotelService.createBooking({
-        hotelId: hotel.hotelId,
-        offerId: selectedOffer.offerId,
-        guestDetails,
-        checkInDate: searchParams.checkInDate,
-        checkOutDate: searchParams.checkOutDate,
-        totalPrice,
-        currency: selectedOffer.currency,
-      });
 
       setLoading(false);
-
-      if (bookingResult.success) {
-        // Navigate to confirmation screen with payment info
-        navigation.navigate('HotelConfirmation', {
-          booking: bookingResult.booking,
-          hotel,
-          selectedOffer,
-          searchParams,
-          nights,
-          payment: {
-            transactionId: paymentResult.transactionId,
-            status: paymentResult.status,
-            authorizationCode: paymentResult.authorizationCode,
-            amount: paymentResult.amount,
-            currency: paymentResult.currency,
-            processedAt: new Date().toISOString(),
-          },
-          orderReference,
-        });
-      } else {
-        Alert.alert(
-          'Booking Failed',
-          bookingResult.error || 'Unable to complete booking. Please try again.'
-        );
-      }
+      payForHotel(quoteId, totalPrice, {
+        currency,
+        onFailed: (errorMessage) => {
+          Alert.alert(
+            'Payment Failed',
+            errorMessage || 'Unable to complete payment. Please try again.'
+          );
+        },
+      });
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
@@ -230,49 +171,12 @@ const HotelPaymentScreen = ({ route, navigation }) => {
 
         {/* Payment Information */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Payment Information</Text>
-          </View>
-          <View style={styles.form}>
-            <Text style={styles.label}>Card Number *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1234 5678 9012 3456"
-              value={paymentInfo.cardNumber}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardNumber: text }))}
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>Cardholder Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="John Doe"
-              value={paymentInfo.cardHolder}
-              onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cardHolder: text }))}
-            />
-
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Expiry Date *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  value={paymentInfo.expiryDate}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, expiryDate: text }))}
-                />
-              </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>CVV *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123"
-                  value={paymentInfo.cvv}
-                  onChangeText={(text) => setPaymentInfo(prev => ({ ...prev, cvv: text }))}
-                  keyboardType="numeric"
-                  secureTextEntry
-                />
-              </View>
-            </View>
+          <Text style={styles.sectionTitle}>Payment Information</Text>
+          <View style={styles.infoBox}>
+            <Ionicons name="lock-closed" size={24} color="#10B981" />
+            <Text style={styles.infoText}>
+              Payment is completed on ARC Pay's secure hosted checkout. Card details are not collected or stored in this app.
+            </Text>
           </View>
         </View>
 
@@ -295,19 +199,19 @@ const HotelPaymentScreen = ({ route, navigation }) => {
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.bookButton, loading && styles.bookButtonDisabled]}
+          style={[styles.bookButton, (loading || isProcessing) && styles.bookButtonDisabled]}
           onPress={handleCompleteBooking}
-          disabled={loading}
+          disabled={loading || isProcessing}
         >
-          {loading ? (
+          {loading || isProcessing ? (
             <>
               <ActivityIndicator size="small" color="#fff" />
               <Text style={styles.bookButtonText}>Processing...</Text>
             </>
           ) : (
             <>
-              <Text style={styles.bookButtonText}>Complete Booking</Text>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Text style={styles.bookButtonText}>Continue to ARC Pay</Text>
+              <Ionicons name="lock-closed" size={20} color="#fff" />
             </>
           )}
         </TouchableOpacity>

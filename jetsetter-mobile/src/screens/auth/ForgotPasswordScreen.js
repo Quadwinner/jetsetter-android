@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import authService from '../../services/authService';
+import { COLORS } from '../../constants/config';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -72,7 +73,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <LinearGradient
-        colors={['#0EA5E9', '#3B82F6']}
+        colors={[COLORS.PRIMARY_DARK, COLORS.PRIMARY, COLORS.PRIMARY_LIGHT]}
         style={styles.gradient}
       >
         <ScrollView
@@ -88,7 +89,9 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
           <View style={styles.content}>
             <View style={styles.iconContainer}>
-              <Ionicons name="lock-closed-outline" size={64} color="#FFFFFF" />
+              <View style={styles.iconBadge}>
+                <Ionicons name="lock-closed-outline" size={40} color={COLORS.PRIMARY} />
+              </View>
             </View>
 
             <Text style={styles.title}>Forgot Password?</Text>
@@ -123,11 +126,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={COLORS.PRIMARY} />
                 ) : (
                   <>
                     <Text style={styles.resetButtonText}>Send Reset Link</Text>
-                    <Ionicons name="send-outline" size={20} color="#FFFFFF" />
+                    <Ionicons name="send-outline" size={20} color={COLORS.PRIMARY} />
                   </>
                 )}
               </TouchableOpacity>
@@ -173,18 +176,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
+  iconBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 30,
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     opacity: 0.9,
     marginBottom: 40,
     paddingHorizontal: 16,
@@ -202,7 +213,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
     marginBottom: 8,
     height: 56,
@@ -230,18 +241,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 16,
     marginTop: 24,
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   resetButtonDisabled: {
     opacity: 0.6,
   },
   resetButtonText: {
-    color: '#0EA5E9',
+    color: COLORS.PRIMARY,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   backToLogin: {
     marginTop: 24,
@@ -255,5 +271,3 @@ const styles = StyleSheet.create({
 });
 
 export default ForgotPasswordScreen;
-
-

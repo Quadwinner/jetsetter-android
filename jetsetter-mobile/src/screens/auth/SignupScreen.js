@@ -13,8 +13,9 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch } from 'react-redux';
-import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import { loginStart, loginFailure } from '../../store/slices/authSlice';
 import authService from '../../services/authService';
 import { COLORS, SCREEN_CONFIG } from '../../constants/config';
 
@@ -33,13 +34,8 @@ const SignupScreen = ({ navigation }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
+    if (!firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!lastName.trim()) newErrors.lastName = 'Last name is required';
 
     if (!email.trim()) {
       newErrors.email = 'Email is required';
@@ -71,27 +67,19 @@ const SignupScreen = ({ navigation }) => {
 
     try {
       const displayName = `${firstName} ${lastName}`;
-
-      // Use Firebase authentication
-      console.log('Attempting Firebase signup...');
       const firebaseResult = await authService.signup(email, password, displayName);
 
       if (firebaseResult.success) {
-        console.log('Firebase signup successful');
-        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
-        // Show verification email message
         Alert.alert(
           'Account Created',
           'Please check your email to verify your account.',
           [{ text: 'OK' }]
         );
       } else {
-        console.log('Signup failed');
         dispatch(loginFailure(firebaseResult.error));
         Alert.alert('Signup Failed', firebaseResult.error);
       }
     } catch (error) {
-      console.error('Signup error:', error);
       dispatch(loginFailure(error.message));
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     } finally {
@@ -105,11 +93,7 @@ const SignupScreen = ({ navigation }) => {
 
     try {
       const result = await authService.signInWithGoogle();
-
-      if (result.success) {
-        // Don't dispatch loginSuccess here - let onAuthStateChange handle it
-        console.log('Google Sign-In successful - Firebase auth state will update automatically');
-      } else {
+      if (!result.success) {
         dispatch(loginFailure(result.error));
         Alert.alert('Google Sign-In Failed', result.error);
       }
@@ -126,152 +110,178 @@ const SignupScreen = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Teal gradient header */}
+        <LinearGradient colors={[COLORS.PRIMARY_DARK, COLORS.PRIMARY]} style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color={COLORS.WHITE} />
+          </TouchableOpacity>
           <Image
             source={require('../../../assets/jetset.jpeg')}
             style={styles.logo}
             resizeMode="contain"
           />
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
-        </View>
+          <Text style={styles.subtitle}>Join Jetsetters and start exploring</Text>
+        </LinearGradient>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={[styles.input, errors.firstName && styles.inputError]}
-              placeholder="Enter your first name"
-              value={firstName}
-              onChangeText={(text) => {
-                setFirstName(text);
-                if (errors.firstName) setErrors({ ...errors, firstName: null });
-              }}
-              autoCapitalize="words"
-            />
-            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
-          </View>
+        {/* White sheet */}
+        <View style={styles.sheet}>
+          <View style={styles.form}>
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+                <Text style={styles.label}>First Name</Text>
+                <View style={[styles.inputRow, errors.firstName && styles.inputError]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="John"
+                    placeholderTextColor="#9CA3AF"
+                    value={firstName}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      if (errors.firstName) setErrors({ ...errors, firstName: null });
+                    }}
+                    autoCapitalize="words"
+                  />
+                </View>
+                {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+              </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={[styles.input, errors.lastName && styles.inputError]}
-              placeholder="Enter your last name"
-              value={lastName}
-              onChangeText={(text) => {
-                setLastName(text);
-                if (errors.lastName) setErrors({ ...errors, lastName: null });
-              }}
-              autoCapitalize="words"
-            />
-            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errors.email) setErrors({ ...errors, email: null });
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
-                placeholder="Create a password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (errors.password) setErrors({ ...errors, password: null });
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                  size={20}
-                  color={COLORS.GRAY}
-                />
-              </TouchableOpacity>
+              <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
+                <Text style={styles.label}>Last Name</Text>
+                <View style={[styles.inputRow, errors.lastName && styles.inputError]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Doe"
+                    placeholderTextColor="#9CA3AF"
+                    value={lastName}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      if (errors.lastName) setErrors({ ...errors, lastName: null });
+                    }}
+                    autoCapitalize="words"
+                  />
+                </View>
+                {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+              </View>
             </View>
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.passwordInput,
-                  errors.confirmPassword && styles.inputError,
-                ]}
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  setConfirmPassword(text);
-                  if (errors.confirmPassword)
-                    setErrors({ ...errors, confirmPassword: null });
-                }}
-                secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons
-                  name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
-                  size={20}
-                  color={COLORS.GRAY}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <View style={[styles.inputRow, errors.email && styles.inputError]}>
+                <Ionicons name="mail-outline" size={18} color={COLORS.GRAY} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (errors.email) setErrors({ ...errors, email: null });
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
                 />
-              </TouchableOpacity>
+              </View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
-            {errors.confirmPassword && (
-              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-            )}
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <View style={[styles.inputRow, errors.password && styles.inputError]}>
+                <Ionicons name="lock-closed-outline" size={18} color={COLORS.GRAY} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Create a password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errors.password) setErrors({ ...errors, password: null });
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={COLORS.GRAY}
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={[styles.inputRow, errors.confirmPassword && styles.inputError]}>
+                <Ionicons name="lock-closed-outline" size={18} color={COLORS.GRAY} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: null });
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                    color={COLORS.GRAY}
+                  />
+                </TouchableOpacity>
+              </View>
+              {errors.confirmPassword && (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleSignup}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={COLORS.WHITE} />
+              ) : (
+                <Text style={styles.buttonText}>Create Account</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+              <Ionicons name="logo-google" size={20} color="#DB4437" />
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleSignup}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color={COLORS.WHITE} />
-            ) : (
-              <Text style={styles.buttonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.loginText}>Sign In</Text>
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -281,77 +291,105 @@ const SignupScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.LIGHT,
+    backgroundColor: COLORS.PRIMARY_DARK,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    paddingTop: 56,
+    paddingBottom: 36,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 56,
+    left: 20,
+    padding: 8,
   },
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
+    width: 68,
+    height: 68,
+    borderRadius: 16,
+    marginBottom: 12,
+    backgroundColor: COLORS.WHITE,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.PRIMARY,
-    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.WHITE,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
-    color: COLORS.GRAY,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+  },
+  sheet: {
+    flex: 1,
+    backgroundColor: COLORS.WHITE,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -20,
+    paddingTop: 28,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   form: {
-    marginBottom: 30,
+    marginBottom: 24,
+  },
+  row: {
+    flexDirection: 'row',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.DARK,
     marginBottom: 8,
   },
-  input: {
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.LIGHT_GRAY,
-    borderRadius: SCREEN_CONFIG.BORDER_RADIUS,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: COLORS.WHITE,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    backgroundColor: '#FAFBFC',
+    height: 50,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.DARK,
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: COLORS.ERROR,
   },
   errorText: {
-    color: '#EF4444',
+    color: COLORS.ERROR,
     fontSize: 12,
     marginTop: 4,
   },
-  passwordContainer: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 50,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-  },
   button: {
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: SCREEN_CONFIG.BORDER_RADIUS,
-    padding: 16,
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 4,
+    shadowColor: COLORS.PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -359,29 +397,46 @@ const styles = StyleSheet.create({
   buttonText: {
     color: COLORS.WHITE,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.LIGHT_GRAY,
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    color: COLORS.GRAY,
+    fontSize: 12,
+    fontWeight: '700',
   },
   googleButton: {
     flexDirection: 'row',
     backgroundColor: COLORS.WHITE,
     borderWidth: 1,
     borderColor: COLORS.LIGHT_GRAY,
-    borderRadius: SCREEN_CONFIG.BORDER_RADIUS,
-    padding: 16,
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
   googleButtonText: {
     color: COLORS.DARK,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: 10,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 'auto',
+    paddingTop: 8,
   },
   footerText: {
     color: COLORS.GRAY,
@@ -390,7 +445,7 @@ const styles = StyleSheet.create({
   loginText: {
     color: COLORS.PRIMARY,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
 

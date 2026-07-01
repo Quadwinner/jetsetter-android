@@ -1,5 +1,7 @@
 import Constants from 'expo-constants';
 import { encode as base64Encode } from 'base-64';
+import axios from 'axios';
+import { API_CONFIG } from '../constants/config';
 
 // ARC Pay API Configuration
 const ARC_CONFIG = {
@@ -14,6 +16,77 @@ const getAuthHeader = () => {
   const credentials = `${ARC_CONFIG.username}:${ARC_CONFIG.password}`;
   const base64Credentials = base64Encode(credentials);
   return `Basic ${base64Credentials}`;
+};
+
+// Create axios instance for backend API calls (matching web app)
+const paymentApi = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/**
+ * Check Gateway Status (matching web app endpoint)
+ * GET /api/payments?action=gateway-status
+ */
+const checkGatewayStatus = async () => {
+  try {
+    console.log('🔍 Checking ARC Pay gateway status...');
+    
+    const response = await paymentApi.get('/payments', {
+      params: { action: 'gateway-status' }
+    });
+
+    console.log('📥 Gateway status response:', response.data);
+
+    return {
+      success: true,
+      gatewayOperational: response.data.gatewayStatus?.status === 'OPERATING',
+      status: response.data.gatewayStatus?.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('❌ Gateway status check error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Gateway unavailable',
+      gatewayOperational: false,
+    };
+  }
+};
+
+/**
+ * Create Hosted Checkout for ArcPay (matching web app endpoint)
+ * POST /api/payments?action=hosted-checkout
+ */
+const createHostedCheckout = async (checkoutData) => {
+  try {
+    console.log('🔐 Creating ARC Pay hosted checkout...');
+    console.log('📤 Checkout data:', {
+      ...checkoutData,
+      // Don't log sensitive data
+    });
+
+    const response = await paymentApi.post('/payments?action=hosted-checkout', checkoutData);
+
+    console.log('📥 Hosted checkout response:', response.data);
+
+    return {
+      success: response.data.success,
+      sessionId: response.data.sessionId,
+      checkoutUrl: response.data.checkoutUrl || response.data.paymentPageUrl,
+      orderId: response.data.orderId,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error('❌ Hosted checkout creation error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create checkout session',
+    };
+  }
 };
 
 /**
@@ -345,49 +418,12 @@ const validateCardNumber = (cardNumber) => {
   return sum % 10 === 0;
 };
 
-/**
- * Mock payment processing for testing (when real API is not available)
- * @param {Object} paymentData - Payment and card details
- * @returns {Promise<Object>} Mock payment result
- */
-const processMockPayment = async (paymentData) => {
-  console.log('🧪 Processing MOCK payment for testing...');
-  
-  const { amount, cardNumber, orderReference } = paymentData;
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Check for test decline card
-  if (cardNumber.replace(/\s/g, '') === '4000000000000002') {
-    return {
-      success: false,
-      status: 'DECLINED',
-      error: 'Payment declined - insufficient funds',
-      transactionId: 'MOCK_DECLINED_' + Date.now(),
-    };
-  }
-  
-  // Successful payment for all other test cards
-  return {
-    success: true,
-    transactionId: 'MOCK_TXN_' + Date.now(),
-    status: 'APPROVED',
-    authorizationCode: 'MOCK_AUTH_' + Math.random().toString(36).substr(2, 9),
-    amount: amount.toFixed(2),
-    currency: 'USD',
-    message: 'Mock payment successful - TEST MODE',
-    data: {
-      orderReference,
-      timestamp: new Date().toISOString(),
-      testMode: true
-    }
-  };
-};
-
 const arcPayService = {
+  // Web app compatible methods
+  checkGatewayStatus,
+  createHostedCheckout,
+  // Legacy methods (still available)
   createPaymentSession,
-  // Use real ARC Pay processing instead of mock
   processPayment,
   checkPaymentStatus,
   refundPayment,
