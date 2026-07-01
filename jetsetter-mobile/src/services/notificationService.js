@@ -4,9 +4,16 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Show notifications even when the app is in the foreground. On Expo SDK 53+
+// (expo-notifications 0.29+) `shouldShowAlert` is deprecated and no longer
+// displays a banner on its own — `shouldShowBanner` / `shouldShowList` are
+// required. Without them, foreground notifications were delivered silently
+// (same class of bug fixed on the web with FCM onMessage).
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldShowAlert: true, // back-compat for older runtimes
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -54,7 +61,7 @@ class NotificationService {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#0EA5E9',
+          lightColor: '#055B75',
         });
       }
 
