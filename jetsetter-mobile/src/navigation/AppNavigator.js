@@ -37,6 +37,7 @@ import PackageConfirmationScreen from '../screens/packages/PackageConfirmationSc
 import MyTripsScreen from '../screens/trips/MyTripsScreen';
 import BookingDetailScreen from '../screens/trips/BookingDetailScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import LegalScreen from '../screens/legal/LegalScreen';
 import NewRequestScreen from '../screens/requests/NewRequestScreen';
 import RequestScreen from '../screens/requests/RequestScreen';
 import InquiryDetailScreen from '../screens/requests/InquiryDetailScreen';
@@ -127,6 +128,7 @@ const MainStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Main" component={MainTabs} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="Legal" component={LegalScreen} />
     <Stack.Screen name="FlightResults" component={FlightResultsScreen} />
     <Stack.Screen name="FlightPayment" component={FlightPaymentScreen} />
     <Stack.Screen name="FlightBooking" component={FlightBookingScreen} />

@@ -11,8 +11,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
-import { logout as logoutAction } from '../../store/slices/authSlice';
+import { logout as logoutAction, setUser } from '../../store/slices/authSlice';
 import authService from '../../services/authService';
+import profileService from '../../services/profileService';
 import styles from './styles/ProfileScreen.styles';
 
 const ProfileScreen = ({ navigation }) => {
@@ -105,6 +106,25 @@ const ProfileScreen = ({ navigation }) => {
           }
         }
       }
+      // Server is the source of truth — overlay the backend profile when it's
+      // reachable so edits persist across devices and match the website.
+      try {
+        const serverRes = await profileService.getProfile();
+        if (serverRes.success && serverRes.profile) {
+          const p = serverRes.profile;
+          const serverProfile = {
+            firstName: p.firstName || '',
+            lastName: p.lastName || '',
+            email: p.email || '',
+            phone: p.phone || '',
+            gender: p.gender || '',
+            dateOfBirth: p.dateOfBirth || '',
+          };
+          setProfileData(serverProfile);
+          setOriginalData(serverProfile);
+          await AsyncStorage.setItem('userProfile', JSON.stringify(serverProfile));
+        }
+      } catch (e) { /* offline — keep local copy */ }
     } catch (error) {
       console.error('Error loading profile:', error);
     }
@@ -171,6 +191,38 @@ const ProfileScreen = ({ navigation }) => {
   const handleSaveProfile = async () => {
     try {
       await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
+
+      // Keep the auth 'user' object in sync so name/email edits survive the next
+      // screen focus — loadProfileData re-derives those fields from 'user', so
+      // without this the edits would be silently reverted.
+      try {
+        const userJson = await AsyncStorage.getItem('user');
+        const user = userJson ? JSON.parse(userJson) : {};
+        const updatedUser = {
+          ...user,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          displayName: `${profileData.firstName} ${profileData.lastName}`.trim(),
+          email: profileData.email || user.email,
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        dispatch(setUser(updatedUser));
+      } catch (e) {
+        console.log('Could not sync user object:', e?.message);
+      }
+
+      // Persist to the backend (same users row the website reads) so the
+      // profile is consistent across web + app, not just on this device.
+      try {
+        await profileService.updateProfile({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          phone: profileData.phone,
+          gender: profileData.gender,
+          dateOfBirth: profileData.dateOfBirth,
+        });
+      } catch (e) { /* offline — saved locally, will sync on next edit */ }
+
       setOriginalData(profileData);
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
@@ -184,6 +236,35 @@ const ProfileScreen = ({ navigation }) => {
   const handleReset = () => {
     setProfileData(originalData);
     setIsEditing(false);
+  };
+
+  // Permanent account deletion (Play Store / GDPR requirement).
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account and personal data. This cannot be undone. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await authService.deleteAccount();
+              if (result.success) {
+                await AsyncStorage.removeItem('userProfile');
+                dispatch(logoutAction());
+                Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
+              } else {
+                Alert.alert('Error', result.error || 'Failed to delete account. Please try again.');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Handle field change
@@ -399,20 +480,47 @@ const ProfileScreen = ({ navigation }) => {
             <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Legal', { url: 'https://www.jetsetterss.com/privacy-policy', title: 'Privacy Policy' })}
+          >
             <Ionicons name="shield-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
             <View style={styles.menuItemContent}>
-              <Text style={styles.menuItemTitle}>Privacy & Security</Text>
-              <Text style={styles.menuItemSubtitle}>Control your privacy settings</Text>
+              <Text style={styles.menuItemTitle}>Privacy Policy</Text>
+              <Text style={styles.menuItemSubtitle}>How we handle your data</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Legal', { url: 'https://www.jetsetterss.com/terms-conditions', title: 'Terms & Conditions' })}
+          >
+            <Ionicons name="document-text-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemTitle}>Terms & Conditions</Text>
+              <Text style={styles.menuItemSubtitle}>Our terms of service</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Legal', { url: 'https://www.jetsetterss.com/contact', title: 'Help & Support' })}
+          >
             <Ionicons name="help-circle-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Help & Support</Text>
               <Text style={styles.menuItemSubtitle}>Get assistance</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={handleDeleteAccount}>
+            <Ionicons name="trash-outline" size={24} color="#dc2626" style={styles.menuItemIcon} />
+            <View style={styles.menuItemContent}>
+              <Text style={[styles.menuItemTitle, { color: '#dc2626' }]}>Delete Account</Text>
+              <Text style={styles.menuItemSubtitle}>Permanently delete your account & data</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
           </TouchableOpacity>

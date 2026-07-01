@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '../constants/config';
 
-const BASE_URL = 'https://www.jetsetterss.com/api';
+const BASE_URL = API_CONFIG.BASE_URL;
 
 const getAuthHeader = async () => {
   const token = await AsyncStorage.getItem('userToken');

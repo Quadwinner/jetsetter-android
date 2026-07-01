@@ -3,14 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
 import supabase from './supabase';
 
-// Force correct production API URL - override config if it's wrong
-const API_BASE_URL = 'https://www.jetsetterss.com/api';
-
-// Log the URL being used for debugging
+// Env-driven base URL (see src/constants/config.js).
+const API_BASE_URL = API_CONFIG.BASE_URL;
 console.log('🔗 RequestService API Base URL:', API_BASE_URL);
-if (API_CONFIG?.BASE_URL && API_CONFIG.BASE_URL !== API_BASE_URL) {
-  console.warn('⚠️ API_CONFIG.BASE_URL mismatch:', API_CONFIG.BASE_URL, '-> Using:', API_BASE_URL);
-}
 
 const requestApi = axios.create({
   baseURL: API_BASE_URL,

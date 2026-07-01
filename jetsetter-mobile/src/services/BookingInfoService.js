@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
 
-// Force correct production API URL
-const API_BASE_URL = 'https://www.jetsetterss.com/api';
+// Env-driven base URL (see src/constants/config.js).
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 const bookingInfoApi = axios.create({
   baseURL: API_BASE_URL,

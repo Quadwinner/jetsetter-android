@@ -1,24 +1,28 @@
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-  sendPasswordResetEmail,
-  sendEmailVerification,
-  GoogleAuthProvider,
-  signInWithCredential,
-} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { auth } from './firebase';
+import { decode as atob } from 'base-64';
+import { API_CONFIG } from '../constants/config';
 
-// Only import Google Sign-In on supported platforms
+/**
+ * authService — authenticates against the SAME backend as the website.
+ * ─────────────────────────────────────────────────────────────
+ * Previously this used Firebase and never stored an access token, so every
+ * authenticated API call went out with no Authorization header → the backend
+ * returned 401 and screens like My Trips / profile came back empty. It also
+ * split identity (app = Firebase, backend = Supabase), so app-only users had no
+ * backend record.
+ *
+ * Now we use the backend /api/auth endpoints (login / register / google-login /
+ * forgot-password). They return a JWT the backend middleware verifies first and
+ * always map to a real users row, so authenticated calls resolve the user. The
+ * token is persisted under every key the various service files read.
+ */
+
+// Google Sign-In is native-only; guard the require so web/dev doesn't crash.
 let GoogleSignin = null;
 if (Platform.OS !== 'web') {
   try {
     GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
-    // Configure Google Sign-In only if available
     GoogleSignin?.configure({
       webClientId: '84512959275-l25c7c0qagj87bbpb7fdtomiseubmnju.apps.googleusercontent.com',
       offlineAccess: true,
@@ -29,310 +33,232 @@ if (Platform.OS !== 'web') {
   }
 }
 
+const API = API_CONFIG.BASE_URL;
+
+// Services read the token under different keys historically — write them all so
+// a request is authenticated no matter which service issues it.
+const TOKEN_KEYS = ['authToken', 'token', 'supabase_token', 'auth_token', 'userToken'];
+
+let authListeners = [];
+let currentUser = null;
+
+function notify(user) {
+  currentUser = user;
+  authListeners.forEach((cb) => {
+    try { cb(user); } catch (e) { console.log('auth listener error:', e?.message); }
+  });
+}
+
+function userFromResponse(data) {
+  const firstName = data.firstName || data.first_name || '';
+  const lastName = data.lastName || data.last_name || '';
+  const displayName = `${firstName} ${lastName}`.trim() || data.name || data.email;
+  return {
+    id: data.id,
+    uid: data.id,
+    email: data.email,
+    firstName,
+    lastName,
+    displayName,
+    role: data.role || 'user',
+    photoURL: data.photoURL || null,
+    emailVerified: true,
+  };
+}
+
+function isTokenExpired(token) {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return false;
+    let b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const payload = JSON.parse(atob(b64));
+    if (!payload.exp) return false;
+    return payload.exp * 1000 <= Date.now();
+  } catch (e) {
+    return false; // if we can't decode, don't force a logout
+  }
+}
+
+async function persistAuth(token, user) {
+  await Promise.all(TOKEN_KEYS.map((k) => AsyncStorage.setItem(k, token)));
+  await AsyncStorage.setItem('user', JSON.stringify(user));
+  await AsyncStorage.setItem('isAuthenticated', 'true');
+}
+
+async function clearAuth() {
+  await Promise.all([...TOKEN_KEYS, 'user'].map((k) => AsyncStorage.removeItem(k)));
+  await AsyncStorage.setItem('isAuthenticated', 'false');
+}
+
+async function postJson(path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* non-JSON error body */ }
+  return { ok: res.ok, status: res.status, data };
+}
+
 class AuthService {
-  /**
-   * Sign up with email and password
-   */
   async signup(email, password, displayName) {
+    const parts = String(displayName || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = parts[0] || 'Guest';
+    const lastName = parts.slice(1).join(' ') || firstName; // backend requires a non-empty last name
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Update user profile with display name
-      if (displayName) {
-        await updateProfile(user, { displayName });
+      const { ok, data } = await postJson('/auth/register', { firstName, lastName, email, password });
+      if (!ok) return { success: false, error: data.message || 'Registration failed' };
+      if (data.token) {
+        const user = userFromResponse(data);
+        await persistAuth(data.token, user);
+        notify(user);
+        return { success: true, user };
       }
-
-      // Send email verification
-      await sendEmailVerification(user);
-
-      // Save user data to AsyncStorage
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName || user.displayName,
-        emailVerified: user.emailVerified,
-      };
-
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('isAuthenticated', 'true');
-
-      return { success: true, user: userData };
+      return { success: true };
     } catch (error) {
-      console.error('Signup error:', error);
-      return { success: false, error: this.getErrorMessage(error.code) };
+      return { success: false, error: 'Network error. Please check your connection.' };
     }
   }
 
-  /**
-   * Sign in with email and password
-   */
   async signin(email, password) {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Save user data to AsyncStorage
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        emailVerified: user.emailVerified,
-      };
-
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('isAuthenticated', 'true');
-
-      return { success: true, user: userData };
+      const { ok, data } = await postJson('/auth/login', { email, password });
+      if (!ok) return { success: false, error: data.message || 'Invalid email or password' };
+      const user = userFromResponse(data);
+      await persistAuth(data.token, user);
+      notify(user);
+      return { success: true, user };
     } catch (error) {
-      console.error('Signin error:', error);
-      return { success: false, error: this.getErrorMessage(error.code) };
+      return { success: false, error: 'Network error. Please check your connection.' };
     }
   }
 
-  /**
-   * Sign in with Google
-   */
   async signInWithGoogle() {
     try {
-      // Check if Google Sign-In is available
       if (!GoogleSignin) {
-        console.log('⚠️ Google Sign-In module not available');
-        return {
-          success: false,
-          error: 'Google Sign-In requires a development build.\n\nTo enable Google Sign-In:\n1. Build the app with: npx expo run:android (or run:ios)\n2. Or create a development build with EAS\n\nFor now, please use email/password login.'
-        };
+        return { success: false, error: 'Google Sign-In requires a development/production build. Please use email/password.' };
       }
-
-      // Check if running on web platform
       if (Platform.OS === 'web') {
-        console.log('⚠️ Google Sign-In not supported on web');
-        return {
-          success: false,
-          error: 'Google Sign-In is only available on mobile devices.\n\nPlease use email/password login on web, or test on a mobile device.'
-        };
+        return { success: false, error: 'Google Sign-In is only available on mobile devices.' };
       }
-
-      console.log('🔐 Initiating Google Sign-In...');
-
-      // Check if device supports Google Play Services (Android only)
       if (Platform.OS === 'android') {
-        console.log('📱 Checking Google Play Services...');
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       }
 
-      // Get user info from Google
-      console.log('👤 Opening Google Sign-In prompt...');
       const userInfo = await GoogleSignin.signIn();
-      console.log('✅ Google Sign-In successful, user:', userInfo.user?.email);
+      const idToken = userInfo?.data?.idToken || userInfo?.idToken;
+      if (!idToken) throw new Error('No ID token received from Google');
 
-      if (!userInfo.data?.idToken) {
-        throw new Error('No ID token received from Google');
-      }
+      const { ok, data } = await postJson('/auth/google-login', { token: idToken });
+      if (!ok) return { success: false, error: data.message || 'Google sign-in failed' };
 
-      // Create Firebase credential
-      console.log('🔑 Creating Firebase credential...');
-      const googleCredential = GoogleAuthProvider.credential(userInfo.data.idToken);
-
-      // Sign in with Firebase
-      console.log('🔥 Signing in with Firebase...');
-      const userCredential = await signInWithCredential(auth, googleCredential);
-      const user = userCredential.user;
-
-      // Save user data
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        emailVerified: user.emailVerified,
-      };
-
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('isAuthenticated', 'true');
-
-      console.log('✅ Google Sign-In complete!');
-      return { success: true, user: userData };
+      const user = userFromResponse(data);
+      await persistAuth(data.token, user);
+      notify(user);
+      return { success: true, user };
     } catch (error) {
-      console.error('❌ Google sign-in error:', error);
-
-      // Handle specific error codes
       if (error.code === 'SIGN_IN_CANCELLED' || error.code === '-5') {
-        return {
-          success: false,
-          error: 'Google Sign-In was cancelled. Please try again.'
-        };
+        return { success: false, error: 'Google Sign-In was cancelled. Please try again.' };
       }
-
       if (error.code === 'IN_PROGRESS') {
-        return {
-          success: false,
-          error: 'Google Sign-In is already in progress. Please wait.'
-        };
+        return { success: false, error: 'Google Sign-In is already in progress. Please wait.' };
       }
-
-      if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
-        return {
-          success: false,
-          error: 'Google Play Services is not available on this device. Please update Google Play Services or use email/password login.'
-        };
-      }
-
-      return {
-        success: false,
-        error: error.message || 'Google sign-in failed. Please try again or use email/password login.'
-      };
+      return { success: false, error: error.message || 'Google sign-in failed. Please try email/password.' };
     }
   }
 
-  /**
-   * Sign out
-   */
   async signout() {
     try {
-      // Sign out from Google if signed in and available
       if (GoogleSignin) {
-        try {
-          const isSignedIn = await GoogleSignin.isSignedIn();
-          if (isSignedIn) {
-            await GoogleSignin.signOut();
-          }
-        } catch (error) {
-          console.log('Google sign-out skipped:', error.message);
-        }
+        try { await GoogleSignin.signOut(); } catch (e) { /* not signed in with google */ }
       }
-
-      await signOut(auth);
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.setItem('isAuthenticated', 'false');
+      await clearAuth();
+      notify(null);
       return { success: true };
     } catch (error) {
-      console.error('Signout error:', error);
       return { success: false, error: error.message };
     }
   }
 
-  /**
-   * Send password reset email
-   */
   async resetPassword(email) {
     try {
-      await sendPasswordResetEmail(auth, email);
-      return { success: true, message: 'Password reset email sent successfully' };
+      const { ok, data } = await postJson('/auth/forgot-password', { email });
+      if (!ok) return { success: false, error: data.message || 'Failed to send reset email' };
+      return { success: true, message: data.message || 'Password reset email sent successfully' };
     } catch (error) {
-      console.error('Password reset error:', error);
-      return { success: false, error: this.getErrorMessage(error.code) };
+      return { success: false, error: 'Network error. Please check your connection.' };
     }
   }
 
-  /**
-   * Get current user from AsyncStorage
-   */
+  async deleteAccount() {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      const res = await fetch(`${API}/auth/me`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      let data = {};
+      try { data = await res.json(); } catch (e) { /* non-JSON */ }
+      if (!res.ok) return { success: false, error: data.message || 'Failed to delete account' };
+      await clearAuth();
+      notify(null);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Network error. Please check your connection.' };
+    }
+  }
+
   async getCurrentUser() {
     try {
       const userJson = await AsyncStorage.getItem('user');
-      if (userJson) {
-        return JSON.parse(userJson);
-      }
-      return null;
+      return userJson ? JSON.parse(userJson) : null;
     } catch (error) {
-      console.error('Get current user error:', error);
       return null;
     }
   }
 
-  /**
-   * Check if user is authenticated
-   * Returns a promise that resolves when auth state is determined
-   */
   async isAuthenticated() {
-    return new Promise((resolve) => {
-      // If currentUser is already available, return immediately
-      if (auth.currentUser) {
-        resolve(true);
-        return;
-      }
-      
-      // Otherwise, wait for auth state to be determined (with timeout)
-      const timeout = setTimeout(() => {
-        unsubscribe();
-        resolve(false);
-      }, 3000);
-      
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        clearTimeout(timeout);
-        unsubscribe();
-        resolve(!!user);
-      });
-    });
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      return !!token && !isTokenExpired(token);
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
-   * Listen to auth state changes
-   * The callback is called after Firebase has restored the persisted session
+   * Token-based auth has no external listener, so we keep a lightweight emitter:
+   * subscribers get an immediate callback with the persisted user (lets App.js
+   * finish its splash) plus updates whenever signin/signup/signout fire.
+   * Returns an unsubscribe function (matches the previous Firebase interface).
    */
   onAuthStateChange(callback) {
-    return onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
-      
-      if (user) {
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL || null,
-          emailVerified: user.emailVerified,
-        };
-        
-        // Persist to AsyncStorage for backup
-        try {
-          await AsyncStorage.setItem('user', JSON.stringify(userData));
-          await AsyncStorage.setItem('isAuthenticated', 'true');
-        } catch (e) {
-          console.log('Failed to save to AsyncStorage:', e);
+    authListeners.push(callback);
+
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        const userJson = await AsyncStorage.getItem('user');
+        if (token && !isTokenExpired(token) && userJson) {
+          currentUser = JSON.parse(userJson);
+          callback(currentUser);
+        } else {
+          if (token) await clearAuth(); // stale/expired session — clean it up
+          currentUser = null;
+          callback(null);
         }
-        
-        callback(userData);
-      } else {
-        // Clear AsyncStorage
-        try {
-          await AsyncStorage.removeItem('user');
-          await AsyncStorage.setItem('isAuthenticated', 'false');
-        } catch (e) {
-          console.log('Failed to clear AsyncStorage:', e);
-        }
-        
+      } catch (e) {
         callback(null);
       }
-    });
+    })();
+
+    return () => { authListeners = authListeners.filter((cb) => cb !== callback); };
   }
 
-  /**
-   * Get user-friendly error messages
-   */
-  getErrorMessage(errorCode) {
-    switch (errorCode) {
-      case 'auth/email-already-in-use':
-        return 'This email address is already in use';
-      case 'auth/invalid-email':
-        return 'Invalid email address';
-      case 'auth/operation-not-allowed':
-        return 'Operation not allowed';
-      case 'auth/weak-password':
-        return 'Password is too weak. Please use at least 6 characters';
-      case 'auth/user-disabled':
-        return 'This account has been disabled';
-      case 'auth/user-not-found':
-        return 'No account found with this email';
-      case 'auth/wrong-password':
-        return 'Incorrect password';
-      case 'auth/too-many-requests':
-        return 'Too many failed attempts. Please try again later';
-      case 'auth/network-request-failed':
-        return 'Network error. Please check your connection';
-      default:
-        return 'An error occurred. Please try again';
-    }
+  getErrorMessage() {
+    return 'An error occurred. Please try again';
   }
 }
 
