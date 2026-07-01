@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   destinationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#E6F4F8',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   destinationText: {
     marginLeft: 6,
     fontSize: 14,
-    color: '#1976D2',
+    color: '#055B75',
     fontWeight: '500',
   },
   amenitiesGrid: {

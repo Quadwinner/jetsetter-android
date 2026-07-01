@@ -323,7 +323,7 @@ const CruiseBookingScreen = ({ route, navigation }) => {
       ))}
 
       <TouchableOpacity style={styles.addButton} onPress={addAdult}>
-        <Ionicons name="add" size={20} color="#0066b2" />
+        <Ionicons name="add" size={20} color="#055B75" />
         <Text style={styles.addButtonText}>Add Adult Passenger</Text>
       </TouchableOpacity>
     </View>
@@ -406,7 +406,7 @@ const CruiseBookingScreen = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#0066b2" />
+          <Ionicons name="arrow-back" size={24} color="#055B75" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Book Cruise</Text>
         <View style={styles.placeholder} />

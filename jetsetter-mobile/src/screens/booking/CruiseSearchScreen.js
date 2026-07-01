@@ -154,7 +154,7 @@ const CruiseSearchScreen = ({ navigation }) => {
         imageStyle={styles.heroImage}
       >
         <LinearGradient
-          colors={['rgba(0, 102, 178, 0.85)', 'rgba(30, 136, 229, 0.85)']}
+          colors={['rgba(3, 68, 87, 0.85)', 'rgba(5, 91, 117, 0.75)']}
           style={styles.heroOverlay}
         >
           <Text style={styles.heroTitle}>Find Your Perfect</Text>
@@ -171,7 +171,7 @@ const CruiseSearchScreen = ({ navigation }) => {
         <View style={styles.formGroup}>
           <Text style={styles.label}>Destination</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="location" size={20} color="#0066b2" style={styles.icon} />
+            <Ionicons name="location" size={20} color="#055B75" style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Where would you like to go?"
@@ -201,7 +201,7 @@ const CruiseSearchScreen = ({ navigation }) => {
         <View style={styles.formGroup}>
           <Text style={styles.label}>Departure Port</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="boat" size={20} color="#0066b2" style={styles.icon} />
+            <Ionicons name="boat" size={20} color="#055B75" style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Miami, Fort Lauderdale, etc."
@@ -231,7 +231,7 @@ const CruiseSearchScreen = ({ navigation }) => {
         <View style={styles.formGroup}>
           <Text style={styles.label}>Cruise Line</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="business" size={20} color="#0066b2" style={styles.icon} />
+            <Ionicons name="business" size={20} color="#055B75" style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Royal Caribbean, Carnival, etc."
@@ -268,7 +268,7 @@ const CruiseSearchScreen = ({ navigation }) => {
                 setShowDatePicker(true);
               }}
             >
-              <Ionicons name="calendar" size={20} color="#0066b2" style={styles.icon} />
+              <Ionicons name="calendar" size={20} color="#055B75" style={styles.icon} />
               <Text style={[styles.input, !departureDate && styles.placeholderText]}>
                 {departureDate || 'Select date'}
               </Text>
@@ -278,7 +278,7 @@ const CruiseSearchScreen = ({ navigation }) => {
           <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
             <Text style={styles.label}>Duration</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="time" size={20} color="#0066b2" style={styles.icon} />
+              <Ionicons name="time" size={20} color="#055B75" style={styles.icon} />
               <Picker
                 selectedValue={duration}
                 onValueChange={setDuration}
@@ -298,7 +298,7 @@ const CruiseSearchScreen = ({ navigation }) => {
           <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
             <Text style={styles.label}>Passengers</Text>
             <View style={styles.inputContainer}>
-              <Ionicons name="people" size={20} color="#0066b2" style={styles.icon} />
+              <Ionicons name="people" size={20} color="#055B75" style={styles.icon} />
               <Picker
                 selectedValue={passengers}
                 onValueChange={setPassengers}
@@ -420,7 +420,7 @@ const CruiseSearchScreen = ({ navigation }) => {
             { icon: 'checkmark-circle', title: 'Instant Confirmation', desc: 'Get booking confirmation immediately' },
           ].map((feature, index) => (
             <View key={index} style={styles.featureCard}>
-              <Ionicons name={feature.icon} size={32} color="#0066b2" />
+              <Ionicons name={feature.icon} size={32} color="#055B75" />
               <Text style={styles.featureTitle}>{feature.title}</Text>
               <Text style={styles.featureDesc}>{feature.desc}</Text>
             </View>

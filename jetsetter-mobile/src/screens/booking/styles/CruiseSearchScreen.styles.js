@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   popularTag: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#E6F4F8',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   popularTagText: {
     fontSize: 12,
-    color: '#1976D2',
+    color: '#055B75',
     fontWeight: '500',
   },
   dateRow: {

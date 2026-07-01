@@ -159,28 +159,28 @@ const CruiseConfirmationScreen = ({ route, navigation }) => {
           
           <View style={styles.infoCard}>
             <View style={styles.infoItem}>
-              <Ionicons name="mail" size={20} color="#0066b2" />
+              <Ionicons name="mail" size={20} color="#055B75" />
               <Text style={styles.infoText}>
                 A confirmation email has been sent to {contactInfo.email}
               </Text>
             </View>
             
             <View style={styles.infoItem}>
-              <Ionicons name="time" size={20} color="#0066b2" />
+              <Ionicons name="time" size={20} color="#055B75" />
               <Text style={styles.infoText}>
                 Check-in opens 2 hours before departure
               </Text>
             </View>
             
             <View style={styles.infoItem}>
-              <Ionicons name="document-text" size={20} color="#0066b2" />
+              <Ionicons name="document-text" size={20} color="#055B75" />
               <Text style={styles.infoText}>
                 Please bring valid ID and booking confirmation
               </Text>
             </View>
             
             <View style={styles.infoItem}>
-              <Ionicons name="call" size={20} color="#0066b2" />
+              <Ionicons name="call" size={20} color="#055B75" />
               <Text style={styles.infoText}>
                 For assistance, call (877) 538-7380
               </Text>
@@ -226,7 +226,7 @@ const CruiseConfirmationScreen = ({ route, navigation }) => {
       {/* Action Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.secondaryButton} onPress={handleViewTrips}>
-          <Ionicons name="briefcase" size={20} color="#0066b2" />
+          <Ionicons name="briefcase" size={20} color="#055B75" />
           <Text style={styles.secondaryButtonText}>View My Trips</Text>
         </TouchableOpacity>
         
@@ -238,7 +238,7 @@ const CruiseConfirmationScreen = ({ route, navigation }) => {
 
       {/* Home Button */}
       <TouchableOpacity style={styles.homeButton} onPress={handleHome}>
-        <Ionicons name="home" size={20} color="#0066b2" />
+        <Ionicons name="home" size={20} color="#055B75" />
         <Text style={styles.homeButtonText}>Back to Home</Text>
       </TouchableOpacity>
     </View>
