@@ -14,13 +14,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
+// Jetsetters brand teal — one cohesive family across all slides
+const BRAND = {
+  gradient: ['#034457', '#055B75', '#0890BC'],
+  primary: '#055B75',
+  accent: '#0890BC',
+};
+
 const onboardingSlides = [
   {
     id: 1,
     title: 'Welcome to Jetsetters',
     description: 'Your gateway to luxury travel experiences. Book flights, hotels, cruises, and vacation packages all in one place.',
     icon: 'airplane',
-    color: '#0890BC',
     showLogo: true,
   },
   {
@@ -28,28 +34,24 @@ const onboardingSlides = [
     title: 'Book Flights Easily',
     description: 'Search and compare flights from 500+ airlines worldwide. Get the best prices with our smart price comparison.',
     icon: 'airplane-outline',
-    color: '#3B82F6',
   },
   {
     id: 3,
     title: 'Find Perfect Hotels',
     description: 'Discover 2M+ properties from budget to luxury. Read verified reviews and get the best rates guaranteed.',
     icon: 'bed-outline',
-    color: '#8B5CF6',
   },
   {
     id: 4,
     title: 'Luxury Cruises',
     description: 'Explore premium cruise experiences with major cruise lines. Customize your perfect cruise vacation.',
     icon: 'boat-outline',
-    color: '#EC4899',
   },
   {
     id: 5,
     title: 'Vacation Packages',
     description: 'All-inclusive packages tailored to your preferences. Save time and money with bundled deals.',
     icon: 'gift-outline',
-    color: '#F59E0B',
   },
 ];
 
@@ -61,10 +63,7 @@ const OnboardingScreen = ({ navigation }) => {
     if (currentSlide < onboardingSlides.length - 1) {
       const nextSlide = currentSlide + 1;
       setCurrentSlide(nextSlide);
-      scrollViewRef.current?.scrollTo({
-        x: nextSlide * width,
-        animated: true,
-      });
+      scrollViewRef.current?.scrollTo({ x: nextSlide * width, animated: true });
     } else {
       handleFinish();
     }
@@ -102,26 +101,27 @@ const OnboardingScreen = ({ navigation }) => {
         {onboardingSlides.map((slide) => (
           <View key={slide.id} style={styles.slide}>
             <LinearGradient
-              colors={[slide.color, `${slide.color}80`]}
+              colors={BRAND.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.gradient}
             >
-              <TouchableOpacity
-                style={styles.skipButton}
-                onPress={handleSkip}
-              >
+              <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
                 <Text style={styles.skipText}>Skip</Text>
               </TouchableOpacity>
 
               <View style={styles.content}>
                 {slide.showLogo ? (
-                  <Image
-                    source={require('../../assets/jetset.jpeg')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                  />
+                  <View style={styles.logoBadge}>
+                    <Image
+                      source={require('../../assets/jetset.jpeg')}
+                      style={styles.logo}
+                      resizeMode="contain"
+                    />
+                  </View>
                 ) : (
-                  <View style={[styles.iconContainer, { backgroundColor: `${slide.color}20` }]}>
-                    <Ionicons name={slide.icon} size={80} color={slide.color} />
+                  <View style={styles.iconContainer}>
+                    <Ionicons name={slide.icon} size={72} color="#FFFFFF" />
                   </View>
                 )}
 
@@ -137,20 +137,16 @@ const OnboardingScreen = ({ navigation }) => {
                       style={[
                         styles.dot,
                         index === currentSlide && styles.dotActive,
-                        { backgroundColor: index === currentSlide ? slide.color : '#FFFFFF40' },
                       ]}
                     />
                   ))}
                 </View>
 
-                <TouchableOpacity
-                  style={[styles.nextButton, { backgroundColor: slide.color }]}
-                  onPress={handleNext}
-                >
+                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                   <Text style={styles.nextButtonText}>
                     {currentSlide === onboardingSlides.length - 1 ? 'Get Started' : 'Next'}
                   </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                  <Ionicons name="arrow-forward" size={20} color={BRAND.primary} />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -164,7 +160,7 @@ const OnboardingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BRAND.primary,
   },
   slide: {
     width,
@@ -190,22 +186,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
   },
+  logoBadge: {
+    width: 168,
+    height: 168,
+    borderRadius: 84,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 44,
+  },
   logo: {
-    width: 180,
-    height: 180,
-    marginBottom: 40,
+    width: 120,
+    height: 120,
+    borderRadius: 24,
   },
   iconContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 168,
+    height: 168,
+    borderRadius: 84,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 48,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 30,
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
@@ -230,9 +238,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   dotActive: {
     width: 24,
+    backgroundColor: '#FFFFFF',
   },
   nextButton: {
     flexDirection: 'row',
@@ -243,14 +253,18 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     gap: 8,
     minWidth: 200,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   nextButtonText: {
-    color: '#FFFFFF',
+    color: BRAND.primary,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
 
 export default OnboardingScreen;
-
-
