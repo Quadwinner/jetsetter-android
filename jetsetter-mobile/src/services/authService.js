@@ -165,6 +165,9 @@ class AuthService {
       if (error.code === 'IN_PROGRESS') {
         return { success: false, error: 'Google Sign-In is already in progress. Please wait.' };
       }
+      if (error.code === 'DEVELOPER_ERROR' || String(error.code) === '10') {
+        return { success: false, error: 'Google Sign-In is not configured for this build (keystore SHA-1 not registered). Please use email/password for now.' };
+      }
       return { success: false, error: error.message || 'Google sign-in failed. Please try email/password.' };
     }
   }

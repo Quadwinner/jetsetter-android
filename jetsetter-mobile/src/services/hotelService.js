@@ -49,10 +49,16 @@ class HotelService {
 
       console.log('Hotel search response:', data);
 
+      // Backend may return the array directly (data.data) or nested under
+      // data.data.hotels — normalize to an array so the results screen renders.
+      const list = Array.isArray(data.data)
+        ? data.data
+        : (data.data?.hotels || data.hotels || []);
+
       return {
         success: true,
-        hotels: data.data || [],
-        meta: data.meta || {},
+        hotels: list,
+        meta: data.meta || data.data?.meta || {},
       };
     } catch (error) {
       console.error('Hotel search error:', error.response?.data || error.message);
