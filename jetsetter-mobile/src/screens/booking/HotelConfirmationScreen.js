@@ -78,11 +78,11 @@ const HotelConfirmationScreen = ({ route, navigation }) => {
             <Text style={styles.hotelName}>{hotel.name}</Text>
             <View style={styles.detailRow}>
               <Ionicons name="location" size={18} color="#64748B" />
-              <Text style={styles.detailText}>{hotel.address}</Text>
+              <Text style={styles.detailText}>{hotel.location || hotel.address?.cityName || ''}</Text>
             </View>
             <View style={styles.detailRow}>
               <Ionicons name="bed" size={18} color="#64748B" />
-              <Text style={styles.detailText}>{selectedOffer.roomType}</Text>
+              <Text style={styles.detailText}>{selectedOffer?.roomType || 'Standard Room'}</Text>
             </View>
             <View style={styles.detailRow}>
               <Ionicons name="calendar" size={18} color="#64748B" />

@@ -14,13 +14,15 @@ const HotelResultsScreen = ({ route, navigation }) => {
   });
   const [sortBy, setSortBy] = useState('price');
 
+  // Backend returns a flat hotel (price/currency/location), not an offers array.
+  const hotelPrice = (h) =>
+    parseFloat(h.price ?? (h.offers && h.offers[0] && h.offers[0].price) ?? 0) || 0;
+
   const sortedHotels = [...hotels].sort((a, b) => {
     if (sortBy === 'price') {
-      const priceA = Math.min(...a.offers.map(o => o.price));
-      const priceB = Math.min(...b.offers.map(o => o.price));
-      return priceA - priceB;
+      return hotelPrice(a) - hotelPrice(b);
     } else if (sortBy === 'rating') {
-      return b.rating - a.rating;
+      return (b.rating || b.stars || 0) - (a.rating || a.stars || 0);
     }
     return 0;
   });
@@ -82,19 +84,19 @@ const HotelResultsScreen = ({ route, navigation }) => {
             key={index}
             style={styles.hotelCard}
           >
-            <Image source={{ uri: hotel.images[0] }} style={styles.hotelImage} />
+            <Image source={{ uri: hotel.image || (hotel.images && hotel.images[0]) }} style={styles.hotelImage} />
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={14} color="#FFC107" />
-              <Text style={styles.ratingText}>{hotel.rating}</Text>
+              <Text style={styles.ratingText}>{hotel.rating || hotel.stars || 'N/A'}</Text>
             </View>
             <View style={styles.hotelContent}>
               <Text style={styles.hotelName}>{hotel.name}</Text>
               <View style={styles.locationRow}>
                 <Ionicons name="location" size={14} color="#64748B" />
-                <Text style={styles.addressText}>{hotel.address}</Text>
+                <Text style={styles.addressText}>{hotel.location || hotel.address?.cityName || ''}</Text>
               </View>
               <View style={styles.amenitiesRow}>
-                {hotel.amenities.slice(0, 4).map((amenity, i) => (
+                {(hotel.amenities || []).slice(0, 4).map((amenity, i) => (
                   <Ionicons key={i} name={renderAmenityIcon(amenity)} size={16} color="#0890BC" style={styles.amenityIcon} />
                 ))}
               </View>
@@ -102,7 +104,7 @@ const HotelResultsScreen = ({ route, navigation }) => {
                 <View>
                   <Text style={styles.priceLabel}>From</Text>
                   <Text style={styles.priceAmount}>
-                    {hotelService.formatPrice(Math.min(...hotel.offers.map(o => o.price)), hotel.offers[0].currency)}
+                    {hotelService.formatPrice(hotelPrice(hotel), hotel.currency || 'USD')}
                   </Text>
                   <Text style={styles.perNightText}>per night</Text>
                 </View>

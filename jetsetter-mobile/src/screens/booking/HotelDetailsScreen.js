@@ -9,7 +9,18 @@ const HotelDetailsScreen = ({ route, navigation }) => {
   
   console.log('🏨 HotelDetailsScreen loaded with hotel:', hotel?.name);
   console.log('🏨 Search params:', searchParams);
-  const [selectedOffer, setSelectedOffer] = useState(hotel.offers[0]);
+  // Backend returns a flat hotel (single price), not an offers array — synthesize
+  // one offer so this screen and the downstream payment/confirmation keep working.
+  const offers = (hotel.offers && hotel.offers.length)
+    ? hotel.offers
+    : [{
+        offerId: hotel.offerId || 'default',
+        roomType: hotel.roomType || 'Standard Room',
+        price: parseFloat(hotel.price) || 0,
+        currency: hotel.currency || 'USD',
+        cancellationPolicy: hotel.cancellationPolicy || 'Check hotel cancellation policy at booking.',
+      }];
+  const [selectedOffer, setSelectedOffer] = useState(offers[0]);
   const nights = hotelService.calculateNights(searchParams.checkInDate, searchParams.checkOutDate);
 
   const handleBookNow = () => {
@@ -20,7 +31,7 @@ const HotelDetailsScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: hotel.images[0] }} style={styles.mainImage} />
+          <Image source={{ uri: hotel.image || (hotel.images && hotel.images[0]) }} style={styles.mainImage} />
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
@@ -32,19 +43,19 @@ const HotelDetailsScreen = ({ route, navigation }) => {
               <Text style={styles.hotelName}>{hotel.name}</Text>
               <View style={styles.ratingBadge}>
                 <Ionicons name="star" size={16} color="#FFC107" />
-                <Text style={styles.ratingText}>{hotel.rating}</Text>
+                <Text style={styles.ratingText}>{hotel.rating || hotel.stars || 'N/A'}</Text>
               </View>
             </View>
             <View style={styles.locationRow}>
               <Ionicons name="location" size={16} color="#64748B" />
-              <Text style={styles.addressText}>{hotel.address}</Text>
+              <Text style={styles.addressText}>{hotel.location || hotel.address?.cityName || ''}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Amenities</Text>
             <View style={styles.amenitiesGrid}>
-              {hotel.amenities.map((amenity, index) => (
+              {(hotel.amenities || []).map((amenity, index) => (
                 <View key={index} style={styles.amenityItem}>
                   <Ionicons name="checkmark-circle" size={20} color="#10B981" />
                   <Text style={styles.amenityText}>{amenity.replace('_', ' ')}</Text>
@@ -55,7 +66,7 @@ const HotelDetailsScreen = ({ route, navigation }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Room Options</Text>
-            {hotel.offers.map((offer, index) => (
+            {offers.map((offer, index) => (
               <TouchableOpacity
                 key={index}
                 style={[styles.roomCard, selectedOffer.offerId === offer.offerId && styles.roomCardActive]}
