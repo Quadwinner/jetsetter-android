@@ -35,6 +35,7 @@ export default function FlightBookingScreen({ route, navigation }) {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState([]);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -96,6 +97,8 @@ export default function FlightBookingScreen({ route, navigation }) {
     setLoading(true);
     try {
       const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0);
+      const seatFee = selectedSeats.reduce((sum, x) => sum + (x.price || 0), 0);
+      const totalAmount = parseFloat(fare.totalAmount) + seatFee;
       const orderId = flightService.generateOrderId();
 
       const bookingData = {
@@ -106,6 +109,8 @@ export default function FlightBookingScreen({ route, navigation }) {
         contactEmail,
         contactPhone,
         selectedAddons,
+        selectedSeats,
+        seatFee,
         fareBreakdown: fare,
         appliedCoupon,
       };
@@ -113,7 +118,7 @@ export default function FlightBookingScreen({ route, navigation }) {
       await flightService.storePendingBooking(bookingData);
 
       const result = await flightService.initiatePayment({
-        amount: parseFloat(fare.totalAmount),
+        amount: totalAmount,
         currency: fare.currency,
         orderId,
         bookingType: 'flight',
@@ -140,6 +145,8 @@ export default function FlightBookingScreen({ route, navigation }) {
   };
 
   const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0);
+  const seatFeeDisplay = selectedSeats.reduce((a, x) => a + (x.price || 0), 0);
+  const grandTotal = (parseFloat(fare.totalAmount) + seatFeeDisplay).toFixed(2);
 
   return (
     <View style={{ flex: 1, backgroundColor: THEME.pageBg }}>
@@ -287,6 +294,35 @@ export default function FlightBookingScreen({ route, navigation }) {
           })}
         </View>
 
+        {/* Seat Selection */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Seat Selection</Text>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: THEME.primary, borderRadius: 12, padding: 14 }}
+            onPress={() => navigation.navigate('FlightSeatMap', {
+              selectedFlight,
+              passengerCount: count,
+              preselected: selectedSeats,
+              onSeatsSelected: setSelectedSeats,
+            })}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Ionicons name="airplane-outline" size={22} color={THEME.primary} />
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={{ fontWeight: '700', color: THEME.textPrimary }}>
+                  {selectedSeats.length ? `Seats: ${selectedSeats.map((x) => x.number).join(', ')}` : 'Choose your seats'}
+                </Text>
+                <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 2 }}>
+                  {selectedSeats.length
+                    ? `Seat fee $${selectedSeats.reduce((a, x) => a + (x.price || 0), 0).toFixed(2)}`
+                    : 'Optional • pick from the seat map'}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={THEME.primary} />
+          </TouchableOpacity>
+        </View>
+
         {/* Coupon */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>Promo Code</Text>
@@ -320,9 +356,12 @@ export default function FlightBookingScreen({ route, navigation }) {
           {parseFloat(fare.couponDiscount) > 0 && (
             <View style={s.fareLine}><Text style={s.fareLabel}>Discount</Text><Text style={[s.fareVal, { color: '#6EE7B7' }]}>-${fare.couponDiscount}</Text></View>
           )}
+          {seatFeeDisplay > 0 && (
+            <View style={s.fareLine}><Text style={s.fareLabel}>Seats ({selectedSeats.length})</Text><Text style={s.fareVal}>${seatFeeDisplay.toFixed(2)}</Text></View>
+          )}
           <View style={[s.fareLine, s.fareTotal]}>
             <Text style={s.fareTotalLabel}>Total</Text>
-            <Text style={s.fareTotalVal}>${fare.totalAmount} {fare.currency}</Text>
+            <Text style={s.fareTotalVal}>${grandTotal} {fare.currency}</Text>
           </View>
           <TouchableOpacity
             style={[s.proceedBtn, loading && { opacity: 0.7 }]}

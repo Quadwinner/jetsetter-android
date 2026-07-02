@@ -51,6 +51,7 @@ import ArcPayWebView from '../screens/payment/ArcPayWebView';
 
 // New Flight Screens
 import FlightBookingScreen from '../screens/booking/FlightBookingScreen';
+import FlightSeatMapScreen from '../screens/booking/FlightSeatMapScreen';
 import FlightCreateOrderScreen from '../screens/booking/FlightCreateOrderScreen';
 import FlightSuccessScreen from '../screens/booking/FlightSuccessScreen';
 import ManageBookingScreen from '../screens/booking/ManageBookingScreen';
@@ -132,6 +133,7 @@ const MainStack = () => (
     <Stack.Screen name="FlightResults" component={FlightResultsScreen} />
     <Stack.Screen name="FlightPayment" component={FlightPaymentScreen} />
     <Stack.Screen name="FlightBooking" component={FlightBookingScreen} />
+    <Stack.Screen name="FlightSeatMap" component={FlightSeatMapScreen} />
     <Stack.Screen name="FlightCreateOrder" component={FlightCreateOrderScreen} options={{ gestureEnabled: false }} />
     <Stack.Screen name="FlightSuccess" component={FlightSuccessScreen} options={{ gestureEnabled: false }} />
     <Stack.Screen name="FlightConfirmation" component={FlightConfirmationScreen} />

@@ -39,6 +39,37 @@ const flightService = {
     return { success: data.success, flights: data.data || [], meta: data.meta || {} };
   },
 
+  // Seat map for a flight offer. Returns normalized seats or success:false when
+  // the airline provides no seat data (common for some carriers/routes).
+  getSeatMap: async (flightOffer) => {
+    try {
+      const res = await fetch(`${BASE_URL}/flights/seatmaps`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flightOffer }),
+      });
+      const data = await res.json();
+      const deck = data?.data?.[0]?.decks?.[0] || null;
+      const rawSeats = deck?.seats || data?.data?.[0]?.seats || [];
+      const seats = rawSeats
+        .filter((s) => s.number)
+        .map((s) => {
+          const tp = s.travelerPricing?.[0] || {};
+          return {
+            number: s.number,
+            row: parseInt(String(s.number).replace(/[A-Z]/gi, ''), 10),
+            col: String(s.number).replace(/[0-9]/g, ''),
+            status: tp.seatAvailabilityStatus || 'AVAILABLE',
+            price: parseFloat(tp.price?.total || 0) || 0,
+            currency: tp.price?.currency || 'USD',
+          };
+        });
+      return { success: !!(data.success && seats.length), seats, deckConfig: deck?.deckConfiguration || null };
+    } catch (e) {
+      return { success: false, seats: [], deckConfig: null };
+    }
+  },
+
   getCheapestDates: async (origin, destination) => {
     const res = await fetch(
       `${BASE_URL}/flights/cheapest-dates?origin=${origin}&destination=${destination}`
