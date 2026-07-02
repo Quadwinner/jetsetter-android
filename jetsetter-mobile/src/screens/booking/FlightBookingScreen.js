@@ -17,10 +17,12 @@ export default function FlightBookingScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const count = parseInt(searchParams?.travelers) || 1;
 
-  const itinerary = selectedFlight?.itineraries?.[0];
-  const segments = itinerary?.segments || [];
-  const first = segments[0];
-  const last = segments[segments.length - 1];
+  // Backend returns a flattened flight shape; build segment-like shims so the
+  // existing first/last.departure.iataCode usages keep working.
+  const _dep = selectedFlight?.departure || {};
+  const _arr = selectedFlight?.arrival || {};
+  const first = { departure: { iataCode: _dep.airport, at: _dep.time }, carrierCode: selectedFlight?.airlineCode, number: selectedFlight?.flightNumber };
+  const last = { arrival: { iataCode: _arr.airport, at: _arr.time } };
 
   const [passengers, setPassengers] = useState(
     Array.from({ length: count }, (_, i) => ({
@@ -160,7 +162,7 @@ export default function FlightBookingScreen({ route, navigation }) {
             </View>
             <View style={s.summaryMiddle}>
               <Ionicons name="airplane" size={20} color="rgba(255,255,255,0.8)" />
-              <Text style={s.summaryDuration}>{parseDuration(itinerary?.duration)}</Text>
+              <Text style={s.summaryDuration}>{selectedFlight?.duration || ''}</Text>
             </View>
             <View style={[s.summaryAirport, { alignItems: 'flex-end' }]}>
               <Text style={s.summaryCode}>{last?.arrival?.iataCode}</Text>
@@ -168,7 +170,7 @@ export default function FlightBookingScreen({ route, navigation }) {
             </View>
           </View>
           <Text style={s.summaryMeta}>
-            {searchParams?.travelClass || 'Economy'} · {count} Traveler{count > 1 ? 's' : ''} · {parseDuration(itinerary?.duration)}
+            {searchParams?.travelClass || 'Economy'} · {count} Traveler{count > 1 ? 's' : ''} · {selectedFlight?.duration || ''}
           </Text>
         </LinearGradient>
 

@@ -15,20 +15,22 @@ const FlightResultsScreen = ({ route, navigation }) => {
   const { flights, searchParams } = route.params;
   const [sortBy, setSortBy] = useState('price'); // price, duration, departure
 
-  // Sort flights based on selected criteria
+  // Duration string like "2h 15m" → total minutes (for sorting).
+  const durationToMinutes = (d) => {
+    const m = String(d || '').match(/(\d+)\s*h\s*(\d+)?\s*m?/i);
+    return m ? parseInt(m[1], 10) * 60 + parseInt(m[2] || '0', 10) : 0;
+  };
+
+  // Sort flights based on selected criteria (backend returns a flattened shape).
   const sortedFlights = [...flights].sort((a, b) => {
     if (sortBy === 'price') {
-      const priceA = parseFloat(a.price?.total || 0);
-      const priceB = parseFloat(b.price?.total || 0);
+      const priceA = parseFloat(a.price?.total || a.price?.amount || 0);
+      const priceB = parseFloat(b.price?.total || b.price?.amount || 0);
       return priceA - priceB;
     } else if (sortBy === 'duration') {
-      const durationA = a.itineraries?.[0]?.duration || 'PT0H';
-      const durationB = b.itineraries?.[0]?.duration || 'PT0H';
-      return durationA.localeCompare(durationB);
+      return durationToMinutes(a.duration) - durationToMinutes(b.duration);
     } else if (sortBy === 'departure') {
-      const timeA = a.itineraries?.[0]?.segments?.[0]?.departure?.at || '';
-      const timeB = b.itineraries?.[0]?.segments?.[0]?.departure?.at || '';
-      return timeA.localeCompare(timeB);
+      return String(a.departure?.time || '').localeCompare(String(b.departure?.time || ''));
     }
     return 0;
   });
@@ -60,21 +62,25 @@ const FlightResultsScreen = ({ route, navigation }) => {
   };
 
   const renderFlightCard = (flight, index) => {
-    const itinerary = flight.itineraries?.[0];
-    const segments = itinerary?.segments || [];
-    const firstSegment = segments[0];
-    const lastSegment = segments[segments.length - 1];
-    const price = flight.price?.total || '0';
+    // Backend returns a FLATTENED shape (not raw Amadeus itineraries/segments).
+    const dep = flight.departure || {};
+    const arr = flight.arrival || {};
+    const price = flight.price?.total || flight.price?.amount || '0';
     const currency = flight.price?.currency || 'USD';
-    const duration = flightService.formatDuration(itinerary?.duration);
-    const stops = segments.length - 1;
-    const carrierCode = firstSegment?.carrierCode || 'XX';
-    const flightNumber = `${carrierCode} ${firstSegment?.number || ''}`;
+    const duration = flight.duration || '';
+    const stops = flight.stops || 0;
+    const carrierCode = flight.airlineCode || 'XX';
+    const airlineName = flight.airline || `${carrierCode} Airlines`;
+    const flightNumber = flight.flightNumber || carrierCode;
+    const viaText = (flight.stopDetails || [])
+      .map((s) => s.airport || s.iataCode || s)
+      .filter(Boolean)
+      .join(', ');
 
-    if (!firstSegment || !lastSegment) return null;
+    if (!dep.airport || !arr.airport) return null;
 
     return (
-      <View key={index} style={styles.flightCard}>
+      <View key={flight.id || index} style={styles.flightCard}>
         {/* Card Top - Airline Info */}
         <View style={styles.cardTop}>
           <Image
@@ -84,7 +90,7 @@ const FlightResultsScreen = ({ route, navigation }) => {
           />
           <View style={styles.airlineInfo}>
             <Text style={styles.airlineName} numberOfLines={1}>
-              {carrierCode} Airlines
+              {airlineName}
             </Text>
             <Text style={styles.flightNumber}>{flightNumber}</Text>
           </View>
@@ -104,13 +110,9 @@ const FlightResultsScreen = ({ route, navigation }) => {
           <View style={styles.routeContainer}>
             {/* Departure */}
             <View style={styles.routePoint}>
-              <Text style={styles.airportCode}>{firstSegment.departure.iataCode}</Text>
-              <Text style={styles.timeText}>
-                {formatTime(firstSegment.departure.at)}
-              </Text>
-              <Text style={styles.cityName}>
-                {formatDate(firstSegment.departure.at)}
-              </Text>
+              <Text style={styles.airportCode}>{dep.airport}</Text>
+              <Text style={styles.timeText}>{dep.time || ''}</Text>
+              <Text style={styles.cityName}>{formatDate(dep.date)}</Text>
             </View>
 
             {/* Flight Path Visualization */}
@@ -130,21 +132,16 @@ const FlightResultsScreen = ({ route, navigation }) => {
                 <Text style={styles.pathNonStop}>Non-stop</Text>
               ) : (
                 <Text style={styles.pathStops}>
-                  {stops} stop{stops > 1 ? 's' : ''} via{' '}
-                  {segments.slice(0, -1).map((seg) => seg.arrival.iataCode).join(', ')}
+                  {stops} stop{stops > 1 ? 's' : ''}{viaText ? ` via ${viaText}` : ''}
                 </Text>
               )}
             </View>
 
             {/* Arrival */}
             <View style={styles.routePointRight}>
-              <Text style={styles.airportCode}>{lastSegment.arrival.iataCode}</Text>
-              <Text style={styles.timeText}>
-                {formatTime(lastSegment.arrival.at)}
-              </Text>
-              <Text style={styles.cityName}>
-                {formatDate(lastSegment.arrival.at)}
-              </Text>
+              <Text style={styles.airportCode}>{arr.airport}</Text>
+              <Text style={styles.timeText}>{arr.time || ''}</Text>
+              <Text style={styles.cityName}>{formatDate(arr.date)}</Text>
             </View>
           </View>
         </View>
@@ -154,24 +151,14 @@ const FlightResultsScreen = ({ route, navigation }) => {
           <View style={styles.detailItem}>
             <Ionicons name="briefcase-outline" size={14} color="#6B7280" />
             <Text style={styles.detailText}>
-              {(searchParams.travelClass || 'ECONOMY').split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}
+              {(flight.cabin || searchParams.travelClass || 'ECONOMY').split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}
             </Text>
           </View>
           <View style={styles.detailItem}>
             <Ionicons name="bag-outline" size={14} color="#6B7280" />
-            <Text style={styles.detailText}>Baggage included</Text>
+            <Text style={styles.detailText}>{flight.baggage ? `Baggage ${flight.baggage}` : 'Baggage included'}</Text>
           </View>
         </View>
-
-        {/* Stops Details */}
-        {stops > 0 && (
-          <View style={styles.stopsContainer}>
-            <Ionicons name="location" size={14} color="#92400E" />
-            <Text style={styles.stopsDetails}>
-              Stops: {segments.slice(0, -1).map((seg) => seg.arrival.iataCode).join(', ')}
-            </Text>
-          </View>
-        )}
 
         {/* Price and Select Button */}
         <View style={styles.priceRow}>

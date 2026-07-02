@@ -12,10 +12,11 @@ export default function FlightSuccessScreen({ route, navigation }) {
   const { bookingRef, pnr, bookingData, selectedFlight } = route.params || {};
   const insets = useSafeAreaInsets();
 
-  const itinerary = selectedFlight?.itineraries?.[0];
-  const segments = itinerary?.segments || [];
-  const first = segments[0];
-  const last = segments[segments.length - 1];
+  // Flattened backend shape → shim segments for existing first/last usages.
+  const _dep = selectedFlight?.departure || {};
+  const _arr = selectedFlight?.arrival || {};
+  const first = { departure: { iataCode: _dep.airport, at: _dep.time }, carrierCode: selectedFlight?.airlineCode, number: selectedFlight?.flightNumber };
+  const last = { arrival: { iataCode: _arr.airport, at: _arr.time } };
   const passengers = bookingData?.passengers || [];
   const fare = bookingData?.fareBreakdown || {};
 
@@ -75,10 +76,10 @@ export default function FlightSuccessScreen({ route, navigation }) {
           {/* Booking Info Grid */}
           <View style={s.infoGrid}>
             {[
-              { label: 'FLIGHT', value: `${first?.carrierCode || ''}${first?.number || ''}` },
-              { label: 'DURATION', value: parseDuration(itinerary?.duration) },
+              { label: 'FLIGHT', value: selectedFlight?.flightNumber || `${first?.carrierCode || ''}` },
+              { label: 'DURATION', value: selectedFlight?.duration || '' },
               { label: 'CLASS', value: bookingData?.searchParams?.travelClass || 'Economy' },
-              { label: 'STOPS', value: String(segments.length - 1) },
+              { label: 'STOPS', value: String(selectedFlight?.stops ?? 0) },
               { label: 'BOOKING REF', value: bookingRef, mono: true },
               { label: 'STATUS', value: 'Confirmed', green: true },
             ].map(({ label, value, mono, green }) => (

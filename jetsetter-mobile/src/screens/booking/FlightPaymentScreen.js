@@ -119,12 +119,8 @@ const FlightPaymentScreen = ({ route, navigation }) => {
         },
       }));
 
-      const itinerary = selectedFlight.itineraries?.[0];
-      const firstSegmentLocal = itinerary?.segments?.[0];
-      const lastSegmentLocal = itinerary?.segments?.[itinerary.segments.length - 1];
-
-      const origin = firstSegmentLocal?.departure?.iataCode || 'Origin';
-      const destination = lastSegmentLocal?.arrival?.iataCode || 'Destination';
+      const origin = selectedFlight?.departure?.airport || 'Origin';
+      const destination = selectedFlight?.arrival?.airport || 'Destination';
 
       const breakdown = {
         base_fare: totalAmount,
@@ -180,11 +176,13 @@ const FlightPaymentScreen = ({ route, navigation }) => {
     }
   };
 
-  const price = selectedFlight.price?.total || '0';
+  const price = selectedFlight.price?.total || selectedFlight.price?.amount || '0';
   const currency = selectedFlight.price?.currency || 'USD';
-  const itinerary = selectedFlight.itineraries?.[0];
-  const firstSegment = itinerary?.segments?.[0];
-  const lastSegment = itinerary?.segments?.[itinerary.segments.length - 1];
+  // Flattened backend shape → shim segments for existing usages.
+  const _dep = selectedFlight?.departure || {};
+  const _arr = selectedFlight?.arrival || {};
+  const firstSegment = { departure: { iataCode: _dep.airport, at: _dep.time } };
+  const lastSegment = { arrival: { iataCode: _arr.airport, at: _arr.time } };
 
   return (
     <View style={styles.container}>
@@ -218,7 +216,7 @@ const FlightPaymentScreen = ({ route, navigation }) => {
               {flightService.formatDateTime(firstSegment?.departure?.at)}
             </Text>
             <Text style={styles.summaryText}>
-              Duration: {flightService.formatDuration(itinerary?.duration)}
+              Duration: {selectedFlight?.duration || ''}
             </Text>
             <Text style={styles.priceText}>
               Total: {flightService.formatPrice(parseFloat(price), currency)}

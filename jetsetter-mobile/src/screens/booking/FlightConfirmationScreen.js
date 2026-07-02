@@ -14,11 +14,13 @@ import styles from './styles/FlightConfirmationScreen.styles';
 const FlightConfirmationScreen = ({ route, navigation }) => {
   const { pnr, orderId, orderData, travelers, flight, payment, orderReference } = route.params;
 
-  const price = flight.price?.total || '0';
+  const price = flight.price?.total || flight.price?.amount || '0';
   const currency = flight.price?.currency || 'USD';
-  const itinerary = flight.itineraries?.[0];
-  const firstSegment = itinerary?.segments?.[0];
-  const lastSegment = itinerary?.segments?.[itinerary.segments.length - 1];
+  // Backend returns a flattened flight shape; shim segments for existing usages.
+  const _dep = flight?.departure || {};
+  const _arr = flight?.arrival || {};
+  const firstSegment = { departure: { iataCode: _dep.airport, at: _dep.time }, carrierCode: flight?.airlineCode, number: flight?.flightNumber };
+  const lastSegment = { arrival: { iataCode: _arr.airport, at: _arr.time } };
 
   // Save booking to AsyncStorage when confirmation screen loads
   useEffect(() => {
@@ -136,7 +138,7 @@ const FlightConfirmationScreen = ({ route, navigation }) => {
                 <View style={styles.detailText}>
                   <Text style={styles.detailLabel}>Duration</Text>
                   <Text style={styles.detailValue}>
-                    {flightService.formatDuration(itinerary?.duration)}
+                    {flight?.duration || ''}
                   </Text>
                 </View>
               </View>
