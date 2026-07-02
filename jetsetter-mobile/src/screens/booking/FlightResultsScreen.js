@@ -120,8 +120,8 @@ const FlightResultsScreen = ({ route, navigation }) => {
   });
 
   const handleSelectFlight = (flight) => {
-    navigation.navigate('FlightBooking', {
-      selectedFlight: flight,
+    navigation.navigate('FlightDetails', {
+      flight,
       searchParams,
     });
   };
@@ -259,7 +259,7 @@ const FlightResultsScreen = ({ route, navigation }) => {
             style={styles.selectButton}
             onPress={() => handleSelectFlight(flight)}
           >
-            <Text style={styles.selectButtonText}>Book Now</Text>
+            <Text style={styles.selectButtonText}>View Details</Text>
             <Ionicons name="arrow-forward" size={16} color="#fff" />
           </TouchableOpacity>
         </View>

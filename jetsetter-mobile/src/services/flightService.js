@@ -70,6 +70,41 @@ const flightService = {
     }
   },
 
+  // Cancellation/fare rules for an offer (refundable, cancel/change fees, bags).
+  getFareRules: async (flightOffer) => {
+    try {
+      const res = await fetch(`${BASE_URL}/flights/fare-rules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flightOffer }),
+      });
+      const data = await res.json();
+      return {
+        success: !!data.success,
+        cancellation: data.cancellation || data.data?.cancellation || null,
+        fareRules: data.fareRules || data.data?.fareRules || [],
+        bags: data.bags || data.data?.bags || [],
+      };
+    } catch (e) {
+      return { success: false, cancellation: null, fareRules: [], bags: [] };
+    }
+  },
+
+  // Branded-fare / upsell options for an offer.
+  getFareOptions: async (flightOffer) => {
+    try {
+      const res = await fetch(`${BASE_URL}/flights/upsell`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flightOffer }),
+      });
+      const data = await res.json();
+      return { success: !!data.success, options: data.data || data.offers || [] };
+    } catch (e) {
+      return { success: false, options: [] };
+    }
+  },
+
   getCheapestDates: async (origin, destination) => {
     const res = await fetch(
       `${BASE_URL}/flights/cheapest-dates?origin=${origin}&destination=${destination}`
