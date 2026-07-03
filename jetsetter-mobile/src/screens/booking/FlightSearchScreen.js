@@ -525,10 +525,12 @@ const FlightSearchScreen = ({ navigation }) => {
               ].map((feature, index) => (
                 <View key={index} style={styles.featureCard}>
                   <View style={styles.featureIconContainer}>
-                    <Ionicons name={feature.icon} size={32} color="#055B75" />
+                    <Ionicons name={feature.icon} size={24} color="#055B75" />
                   </View>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDesc}>{feature.desc}</Text>
+                  <View style={styles.featureTextWrap}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDesc}>{feature.desc}</Text>
+                  </View>
                 </View>
               ))}
             </View>
