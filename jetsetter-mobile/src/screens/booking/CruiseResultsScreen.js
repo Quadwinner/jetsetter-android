@@ -74,7 +74,7 @@ export default function CruiseResultsScreen({ route, navigation }) {
           <View>
             <Text style={styles.priceLabel}>Starting from</Text>
             <Text style={styles.priceText}>
-              ${item.priceValue || item.price_per_person || 699}
+              {cruiseService.formatPrice(item.priceValue || item.price_per_person || 699)}
             </Text>
           </View>
           <View style={styles.viewButton}>

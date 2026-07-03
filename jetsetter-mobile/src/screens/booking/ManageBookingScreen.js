@@ -47,7 +47,7 @@ export default function ManageBookingScreen({ route, navigation }) {
       if (result.success) {
         Alert.alert(
           'Booking Cancelled',
-          `Refund of $${result.refundAmount?.toFixed(2) || '0.00'} will be processed within 5-7 business days.`,
+          `Refund of ${flightService.formatPrice(result.refundAmount || 0)} will be processed within 5-7 business days.`,
           [{ text: 'OK', onPress: () => navigation.navigate('Cruise') }]
         );
       } else {
@@ -162,11 +162,11 @@ export default function ManageBookingScreen({ route, navigation }) {
             <Text style={s.cardTitle}>Payment</Text>
             {booking?.fareBreakdown ? (
               <>
-                <View style={s.detailRow}><Text style={s.detailLabel}>Base Fare</Text><Text style={s.detailValue}>${booking.fareBreakdown.baseFare}</Text></View>
-                <View style={s.detailRow}><Text style={s.detailLabel}>Taxes</Text><Text style={s.detailValue}>${booking.fareBreakdown.taxes}</Text></View>
+                <View style={s.detailRow}><Text style={s.detailLabel}>Base Fare</Text><Text style={s.detailValue}>{flightService.formatPrice(booking.fareBreakdown.baseFare)}</Text></View>
+                <View style={s.detailRow}><Text style={s.detailLabel}>Taxes</Text><Text style={s.detailValue}>{flightService.formatPrice(booking.fareBreakdown.taxes)}</Text></View>
                 <View style={[s.detailRow, s.totalRow]}>
                   <Text style={s.totalLabel}>Total Paid</Text>
-                  <Text style={s.totalValue}>${booking.fareBreakdown.totalAmount}</Text>
+                  <Text style={s.totalValue}>{flightService.formatPrice(booking.fareBreakdown.totalAmount)}</Text>
                 </View>
               </>
             ) : (

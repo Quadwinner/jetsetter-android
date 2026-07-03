@@ -24,6 +24,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import destinationsData from '../../data/destinations.json';
 import cruiseLinesData from '../../data/cruiselines.json';
 import homeService from '../../services/homeService';
+import currencyService from '../../services/currencyService';
 import styles from './styles/HomeScreen.styles';
 
 const { width } = Dimensions.get('window');
@@ -623,7 +624,11 @@ const HomeScreen = ({ navigation }) => {
                     <View style={localStyles.destInfo}>
                       <Text style={localStyles.destName} numberOfLines={1}>{name}</Text>
                       {!!country && <Text style={localStyles.destCountry} numberOfLines={1}>{country}</Text>}
-                      <Text style={localStyles.destPrice}>From ${price}</Text>
+                      <Text style={localStyles.destPrice}>
+                        {Number.isFinite(parseFloat(String(price).replace(/[^0-9.]/g, '')))
+                          ? `From ${currencyService.format(String(price).replace(/[^0-9.]/g, ''))}`
+                          : 'Price on request'}
+                      </Text>
                       <TouchableOpacity
                         style={localStyles.bookBtn}
                         onPress={() => navigation.navigate('CruiseResults', {

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import currencyService from '../../services/currencyService';
 
 export default function CruiseDetailsScreen({ route, navigation }) {
   const { cruise } = route.params;
@@ -100,7 +101,7 @@ export default function CruiseDetailsScreen({ route, navigation }) {
                   {cabin.type}
                 </Text>
                 <Text style={[styles.cabinPrice, isSelected && styles.textWhite]}>
-                  ${cabin.price}
+                  {currencyService.format(cabin.price)}
                 </Text>
               </TouchableOpacity>
             );
@@ -127,7 +128,7 @@ export default function CruiseDetailsScreen({ route, navigation }) {
       <View style={[styles.stickyFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View>
           <Text style={styles.totalLabel}>Total for 1 Guest</Text>
-          <Text style={styles.totalPrice}>${selectedCabin.price}</Text>
+          <Text style={styles.totalPrice}>{currencyService.format(selectedCabin.price)}</Text>
         </View>
         <TouchableOpacity style={styles.bookButton} onPress={handleBookNow}>
           <Text style={styles.bookButtonText}>Book Now</Text>

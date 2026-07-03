@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import notificationService from '../../services/notificationService';
+import currencyService from '../../services/currencyService';
 import styles from './styles/CruiseConfirmationScreen.styles';
 
 const CruiseConfirmationScreen = ({ route, navigation }) => {
@@ -117,7 +118,7 @@ const CruiseConfirmationScreen = ({ route, navigation }) => {
 
           <View style={styles.detailCard}>
             <Text style={styles.detailLabel}>Total Amount</Text>
-            <Text style={styles.detailValue}>${totalAmount.toFixed(2)}</Text>
+            <Text style={styles.detailValue}>{currencyService.format(totalAmount)}</Text>
           </View>
         </View>
 

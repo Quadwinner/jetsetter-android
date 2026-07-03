@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME } from '../../constants/flightConstants';
 import { formatTime, parseDuration } from '../../utils/flightUtils';
+import currencyService from '../../services/currencyService';
 
 export default function FlightSuccessScreen({ route, navigation }) {
   const { bookingRef, pnr, bookingData, selectedFlight } = route.params || {};
@@ -115,12 +116,12 @@ export default function FlightSuccessScreen({ route, navigation }) {
           {/* Payment Summary */}
           <View style={s.paySection}>
             <Text style={s.passSectionTitle}>Payment Summary</Text>
-            {fare.baseFare && <View style={s.payRow}><Text style={s.payLabel}>Base Fare</Text><Text style={s.payVal}>${fare.baseFare}</Text></View>}
-            {fare.taxes && <View style={s.payRow}><Text style={s.payLabel}>Taxes & Fees</Text><Text style={s.payVal}>${fare.taxes}</Text></View>}
-            {parseFloat(fare.couponDiscount) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Discount</Text><Text style={[s.payVal, { color: THEME.success }]}>-${fare.couponDiscount}</Text></View>}
+            {fare.baseFare && <View style={s.payRow}><Text style={s.payLabel}>Base Fare</Text><Text style={s.payVal}>{currencyService.format(fare.baseFare)}</Text></View>}
+            {fare.taxes && <View style={s.payRow}><Text style={s.payLabel}>Taxes & Fees</Text><Text style={s.payVal}>{currencyService.format(fare.taxes)}</Text></View>}
+            {parseFloat(fare.couponDiscount) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Discount</Text><Text style={[s.payVal, { color: THEME.success }]}>-{currencyService.format(fare.couponDiscount)}</Text></View>}
             <View style={[s.payRow, s.payTotal]}>
               <Text style={s.payTotalLabel}>Total Paid</Text>
-              <Text style={s.payTotalVal}>${fare.totalAmount}</Text>
+              <Text style={s.payTotalVal}>{currencyService.format(fare.totalAmount)}</Text>
             </View>
             <View style={s.paySuccessBox}>
               <Ionicons name="checkmark-circle" size={18} color={THEME.success} />

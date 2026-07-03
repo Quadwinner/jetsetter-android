@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MyTripsService from '../../services/MyTripsService';
+import currencyService from '../../services/currencyService';
 import BookingInfoService from '../../services/BookingInfoService';
 import styles from './styles/MyTripsScreen.styles';
 
@@ -329,7 +330,7 @@ const MyTripsScreen = ({ navigation }) => {
             <View style={styles.infoRow}>
               <Ionicons name="cash-outline" size={16} color="#6B7280" />
               <Text style={styles.infoLabel}>Amount</Text>
-              <Text style={styles.infoValue}>${booking.amount || booking.totalAmount || '0.00'}</Text>
+              <Text style={styles.infoValue}>{currencyService.format(booking.amount || booking.totalAmount || 0)}</Text>
             </View>
           )}
 

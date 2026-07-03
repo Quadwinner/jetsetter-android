@@ -65,7 +65,7 @@ export default function FlightBookingScreen({ route, navigation }) {
       const result = await flightService.validateCoupon(couponCode.trim(), parseFloat(fare.totalAmount), null);
       if (result.success) {
         setAppliedCoupon(result);
-        Alert.alert('Coupon Applied!', `Saving $${result.discountAmount?.toFixed(2)}`);
+        Alert.alert('Coupon Applied!', `Saving ${currencyService.format(result.discountAmount)}`);
       } else {
         Alert.alert('Invalid Coupon', result.message || 'Coupon not valid');
       }
@@ -315,7 +315,7 @@ export default function FlightBookingScreen({ route, navigation }) {
                 </Text>
                 <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 2 }}>
                   {selectedSeats.length
-                    ? `Seat fee $${selectedSeats.reduce((a, x) => a + (x.price || 0), 0).toFixed(2)}`
+                    ? `Seat fee ${currencyService.format(selectedSeats.reduce((a, x) => a + (x.price || 0), 0))}`
                     : 'Optional • pick from the seat map'}
                 </Text>
               </View>
@@ -340,7 +340,7 @@ export default function FlightBookingScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
           {appliedCoupon && (
-            <Text style={s.couponSuccess}>✓ {couponCode} applied — saving ${appliedCoupon.discountAmount?.toFixed(2)}</Text>
+            <Text style={s.couponSuccess}>✓ {couponCode} applied — saving {currencyService.format(appliedCoupon.discountAmount)}</Text>
           )}
         </View>
       </ScrollView>

@@ -98,8 +98,11 @@ const currencyService = {
   },
 
   // amount in `from` currency (default USD) → user's currency.
+  // Accepts numbers or strings like "$699" / "1,299.00" (symbols & separators stripped).
   convert(amount, from = 'USD') {
-    const a = parseFloat(amount) || 0;
+    const a = typeof amount === 'string'
+      ? (parseFloat(amount.replace(/[^0-9.\-]/g, '')) || 0)
+      : (parseFloat(amount) || 0);
     const rFrom = Number(state.rates[from]) || 1;
     const rTo = Number(state.rates[state.currency]) || 1;
     return (a / rFrom) * rTo;

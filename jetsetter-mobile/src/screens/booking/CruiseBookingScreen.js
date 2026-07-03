@@ -365,22 +365,22 @@ const CruiseBookingScreen = ({ route, navigation }) => {
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Base Price:</Text>
-          <Text style={styles.summaryValue}>{cruise.price}</Text>
+          <Text style={styles.summaryValue}>{cruiseService.formatPrice(cruise.price)}</Text>
         </View>
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Taxes & Fees:</Text>
-          <Text style={styles.summaryValue}>$150</Text>
+          <Text style={styles.summaryValue}>{cruiseService.formatPrice(150)}</Text>
         </View>
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Port Charges:</Text>
-          <Text style={styles.summaryValue}>$200</Text>
+          <Text style={styles.summaryValue}>{cruiseService.formatPrice(200)}</Text>
         </View>
 
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>${calculateTotal().toFixed(2)}</Text>
+          <Text style={styles.totalValue}>{cruiseService.formatPrice(calculateTotal())}</Text>
         </View>
       </View>
     </View>
