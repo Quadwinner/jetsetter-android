@@ -10,10 +10,11 @@ const getAuthHeader = async () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Admin-configured taxes/fees for flights (same source the website uses:
-// GET /admin/price-config/flights). Cached ~10 min. NOT hardcoded — the values
-// come from the admin panel; the offline fallback only mirrors the backend's own
-// server-side default so the fare screen still renders when the network is down.
+// Admin-configured taxes/fees for flights. Reads the SAME endpoint the website
+// uses (GET /admin/price-settings) so app + web share one source of truth.
+// NB: we intentionally avoid /admin/price-config/flights — that endpoint maps
+// values with `x || default`, which turns an admin-set 0% into the 5% default.
+// Cached ~10 min. Offline fallback only mirrors the backend's own default.
 let _flightPricingCache = null;
 let _flightPricingAt = 0;
 
@@ -197,20 +198,23 @@ const flightService = {
   generateOrderId,
 
   // Fetch the admin-configured flight taxes/fees. Returns { taxesFees,
-  // taxesFeesPercentage } from the admin panel via /admin/price-config/flights.
+  // taxesFeesPercentage } read from /admin/price-settings — the same source and
+  // keys the website uses (flight_taxes_fees, flight_taxes_fees_percentage), so a
+  // 0% set in the admin panel is honored exactly (not defaulted to 5%).
   getFlightPricingConfig: async () => {
     const now = Date.now();
     if (_flightPricingCache && now - _flightPricingAt < 10 * 60 * 1000) {
       return _flightPricingCache;
     }
     try {
-      const res = await fetch(`${BASE_URL}/admin/price-config/flights`);
+      const res = await fetch(`${BASE_URL}/admin/price-settings`);
       const data = await res.json();
-      const cfg = data?.data || data;
-      if (cfg && (cfg.taxes_fees != null || cfg.taxes_fees_percentage != null)) {
+      const s = data?.data || data;
+      if (s && (s.flight_taxes_fees != null || s.flight_taxes_fees_percentage != null)) {
+        // Number(...) respects 0; `|| 0` here only guards NaN (fallback is 0 anyway).
         _flightPricingCache = {
-          taxesFees: parseFloat(cfg.taxes_fees) || 0,
-          taxesFeesPercentage: parseFloat(cfg.taxes_fees_percentage) || 0,
+          taxesFees: Number(s.flight_taxes_fees) || 0,
+          taxesFeesPercentage: Number(s.flight_taxes_fees_percentage) || 0,
         };
         _flightPricingAt = now;
         return _flightPricingCache;
