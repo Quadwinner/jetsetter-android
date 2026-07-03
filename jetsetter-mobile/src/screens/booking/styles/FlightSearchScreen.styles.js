@@ -11,8 +11,10 @@ export default StyleSheet.create({
   // Enhanced Hero Section matching JETSET13
   heroContainer: {
     width: '100%',
-    height: 220,
+    minHeight: 300,
     justifyContent: 'center',
+    paddingTop: 24,
+    paddingBottom: 56, // room for the trip-type pill overlapping the bottom
     backgroundColor: '#FFFFFF',
   },
   heroOverlay: {
@@ -24,7 +26,6 @@ export default StyleSheet.create({
   },
   heroTextContainer: {
     paddingHorizontal: 20,
-    marginTop: -80, // Push up slightly
     alignItems: 'center',
     zIndex: 2,
   },
@@ -88,6 +89,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginTop: -28, // overlap the bottom of the hero
     marginBottom: 20,
     zIndex: 5,
   },

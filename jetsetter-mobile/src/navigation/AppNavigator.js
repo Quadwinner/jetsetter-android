@@ -75,11 +75,11 @@ const MainTabs = () => (
     screenOptions={{
       headerShown: false,
       tabBarStyle: {
-        backgroundColor: '#1e40af',
-        borderTopColor: '#3b82f6',
+        backgroundColor: '#055B75',
+        borderTopColor: '#034457',
       },
       tabBarActiveTintColor: '#ffffff',
-      tabBarInactiveTintColor: '#93c5fd',
+      tabBarInactiveTintColor: '#A8D4E2',
     }}
   >
     <Tab.Screen
