@@ -6,6 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +17,38 @@ import { useFocusEffect } from '@react-navigation/native';
 import { logout as logoutAction, setUser } from '../../store/slices/authSlice';
 import authService from '../../services/authService';
 import profileService from '../../services/profileService';
+import currencyService from '../../services/currencyService';
 import styles from './styles/ProfileScreen.styles';
+
+// Currencies we hold live FX rates for (backend /currency/rates). Offering only
+// these guarantees conversion always works. Display is converted to the chosen
+// currency; the amount charged stays USD (ARC Pay is USD-only).
+const CURRENCIES = [
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'AED', name: 'UAE Dirham', symbol: 'AED' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+  { code: 'THB', name: 'Thai Baht', symbol: '฿' },
+];
+
+const cur = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 32 },
+  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', marginBottom: 14 },
+  title: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  note: { fontSize: 12, color: '#6B7280', marginTop: 4, marginBottom: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 10, borderRadius: 12 },
+  rowActive: { backgroundColor: '#f0f9ff' },
+  symBox: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  sym: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+  code: { fontSize: 15, fontWeight: '600', color: '#111827' },
+  name: { fontSize: 12, color: '#6B7280', marginTop: 1 },
+});
 
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -29,6 +63,8 @@ const ProfileScreen = ({ navigation }) => {
     dateOfBirth: '',
   });
   const [originalData, setOriginalData] = useState({});
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState(currencyService.getCurrency());
 
   // Load profile data from AsyncStorage
   const loadProfileData = useCallback(async () => {
@@ -134,8 +170,21 @@ const ProfileScreen = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       loadProfileData();
+      setSelectedCurrency(currencyService.getCurrency());
     }, [loadProfileData])
   );
+
+  // Persist the chosen currency and update every price display app-wide.
+  const handleSelectCurrency = async (code) => {
+    await currencyService.setCurrency(code);
+    setSelectedCurrency(code);
+    setShowCurrencyModal(false);
+  };
+
+  const currencyLabel = () => {
+    const c = CURRENCIES.find((x) => x.code === selectedCurrency);
+    return c ? `${c.code} · ${c.symbol}` : selectedCurrency;
+  };
 
   // Navigate to login screen
   const handleLogin = async () => {
@@ -272,6 +321,61 @@ const ProfileScreen = ({ navigation }) => {
     setProfileData({ ...profileData, [field]: value });
   };
 
+  // Currency selector menu row (used in both guest & authenticated views)
+  const renderCurrencyRow = (isLast = false) => (
+    <TouchableOpacity
+      style={[styles.menuItem, isLast && styles.menuItemLast]}
+      onPress={() => setShowCurrencyModal(true)}
+    >
+      <Ionicons name="cash-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
+      <View style={styles.menuItemContent}>
+        <Text style={styles.menuItemTitle}>Currency</Text>
+        <Text style={styles.menuItemSubtitle}>Prices shown in {currencyLabel()}</Text>
+      </View>
+      <Text style={{ color: '#0ea5e9', fontWeight: '700', marginRight: 6 }}>{selectedCurrency}</Text>
+      <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
+    </TouchableOpacity>
+  );
+
+  // Currency picker modal
+  const renderCurrencyModal = () => (
+    <Modal
+      visible={showCurrencyModal}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowCurrencyModal(false)}
+    >
+      <Pressable style={cur.backdrop} onPress={() => setShowCurrencyModal(false)}>
+        <Pressable style={cur.sheet} onPress={() => {}}>
+          <View style={cur.handle} />
+          <Text style={cur.title}>Choose Currency</Text>
+          <Text style={cur.note}>Prices are shown in your currency. Payment is charged in USD.</Text>
+          <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+            {CURRENCIES.map((c) => {
+              const active = c.code === selectedCurrency;
+              return (
+                <TouchableOpacity
+                  key={c.code}
+                  style={[cur.row, active && cur.rowActive]}
+                  onPress={() => handleSelectCurrency(c.code)}
+                >
+                  <View style={cur.symBox}>
+                    <Text style={cur.sym}>{c.symbol}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={cur.code}>{c.code}</Text>
+                    <Text style={cur.name}>{c.name}</Text>
+                  </View>
+                  {active && <Ionicons name="checkmark-circle" size={22} color="#0ea5e9" />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+
   // Render guest view
   const renderGuestView = () => (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -294,6 +398,11 @@ const ProfileScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.authButton} onPress={handleLogin}>
           <Text style={styles.authButtonText}>Sign In</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Preferences</Text>
+        {renderCurrencyRow(true)}
       </View>
 
       <View style={styles.section}>
@@ -471,6 +580,8 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
 
+          {renderCurrencyRow()}
+
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="notifications-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
             <View style={styles.menuItemContent}>
@@ -535,7 +646,12 @@ const ProfileScreen = ({ navigation }) => {
     </ScrollView>
   );
 
-  return isAuthenticated ? renderAuthenticatedView() : renderGuestView();
+  return (
+    <>
+      {isAuthenticated ? renderAuthenticatedView() : renderGuestView()}
+      {renderCurrencyModal()}
+    </>
+  );
 };
 
 export default ProfileScreen;
