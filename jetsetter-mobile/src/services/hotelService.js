@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
+import currencyService from './currencyService';
 
 // Create axios instance for hotel API
 const hotelApi = axios.create({
@@ -231,15 +232,7 @@ class HotelService {
    * @returns {string} Formatted price
    */
   formatPrice(amount, currency = 'USD') {
-    const symbols = {
-      USD: '$',
-      EUR: '€',
-      GBP: '£',
-      INR: '₹',
-    };
-
-    const symbol = symbols[currency] || currency;
-    return `${symbol}${amount.toFixed(2)}`;
+    return currencyService.format(amount, currency);
   }
 
   /**

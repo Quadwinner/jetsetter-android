@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
+import currencyService from './currencyService';
 
 const packageApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -64,8 +65,7 @@ class PackageService {
   }
 
   formatPrice(amount, currency = 'USD') {
-    const s = { USD: '$', EUR: '€', GBP: '£', INR: '₹' };
-    return `${s[currency] || currency}${amount.toFixed(2)}`;
+    return currencyService.format(amount, currency);
   }
 
   formatDate(date) {

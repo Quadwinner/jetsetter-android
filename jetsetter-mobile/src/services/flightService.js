@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../constants/config';
 import { generateOrderId, parseDuration } from '../utils/flightUtils';
+import currencyService from './currencyService';
 
 const BASE_URL = API_CONFIG.BASE_URL;
 
@@ -196,10 +197,7 @@ const flightService = {
 
   formatDuration: parseDuration,
 
-  formatPrice: (amount, currency = 'USD') => {
-    const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹' };
-    return `${symbols[currency] || currency}${Number(amount).toFixed(2)}`;
-  },
+  formatPrice: (amount, currency = 'USD') => currencyService.format(amount, currency),
 
   formatDateTime: (dateTime) => {
     if (!dateTime) return 'N/A';

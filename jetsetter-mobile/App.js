@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { setUser } from './src/store/slices/authSlice';
 import authService from './src/services/authService';
 import notificationService from './src/services/notificationService';
+import currencyService from './src/services/currencyService';
 import SplashScreen from './src/screens/SplashScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -57,6 +58,9 @@ function AppContent() {
     };
 
     initNotifications();
+
+    // Detect the user's currency + load FX rates so prices show in local currency.
+    currencyService.init().catch((e) => console.log('currency init failed:', e?.message));
 
     return () => {
       mounted = false;

@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking } from 'react-native';
 import flightService from '../../services/flightService';
+import currencyService from '../../services/currencyService';
 import { ADDON_LIST, THEME } from '../../constants/flightConstants';
 import { calculateFare, formatTime, parseDuration } from '../../utils/flightUtils';
 
@@ -288,7 +289,7 @@ export default function FlightBookingScreen({ route, navigation }) {
                     <Text style={[s.addonDesc, selected && { color: 'rgba(255,255,255,0.8)' }]}>{addon.description}</Text>
                   </View>
                 </View>
-                <Text style={[s.addonPrice, selected && { color: '#fff' }]}>${addon.price}</Text>
+                <Text style={[s.addonPrice, selected && { color: '#fff' }]}>{currencyService.format(addon.price)}</Text>
               </TouchableOpacity>
             );
           })}
@@ -348,20 +349,20 @@ export default function FlightBookingScreen({ route, navigation }) {
       <View style={[s.fareCard, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <LinearGradient colors={[THEME.primary, THEME.primaryDark]} style={s.fareGradient}>
           <Text style={s.fareTitle}>Fare Summary</Text>
-          <View style={s.fareLine}><Text style={s.fareLabel}>Base Fare ({count}x)</Text><Text style={s.fareVal}>${fare.baseFare}</Text></View>
-          <View style={s.fareLine}><Text style={s.fareLabel}>Taxes & Fees</Text><Text style={s.fareVal}>${fare.taxes}</Text></View>
+          <View style={s.fareLine}><Text style={s.fareLabel}>Base Fare ({count}x)</Text><Text style={s.fareVal}>{currencyService.format(fare.baseFare)}</Text></View>
+          <View style={s.fareLine}><Text style={s.fareLabel}>Taxes & Fees</Text><Text style={s.fareVal}>{currencyService.format(fare.taxes)}</Text></View>
           {parseFloat(fare.addonsTotal) > 0 && (
-            <View style={s.fareLine}><Text style={s.fareLabel}>Add-ons</Text><Text style={s.fareVal}>${fare.addonsTotal}</Text></View>
+            <View style={s.fareLine}><Text style={s.fareLabel}>Add-ons</Text><Text style={s.fareVal}>{currencyService.format(fare.addonsTotal)}</Text></View>
           )}
           {parseFloat(fare.couponDiscount) > 0 && (
-            <View style={s.fareLine}><Text style={s.fareLabel}>Discount</Text><Text style={[s.fareVal, { color: '#6EE7B7' }]}>-${fare.couponDiscount}</Text></View>
+            <View style={s.fareLine}><Text style={s.fareLabel}>Discount</Text><Text style={[s.fareVal, { color: '#6EE7B7' }]}>-{currencyService.format(fare.couponDiscount)}</Text></View>
           )}
           {seatFeeDisplay > 0 && (
-            <View style={s.fareLine}><Text style={s.fareLabel}>Seats ({selectedSeats.length})</Text><Text style={s.fareVal}>${seatFeeDisplay.toFixed(2)}</Text></View>
+            <View style={s.fareLine}><Text style={s.fareLabel}>Seats ({selectedSeats.length})</Text><Text style={s.fareVal}>{currencyService.format(seatFeeDisplay)}</Text></View>
           )}
           <View style={[s.fareLine, s.fareTotal]}>
             <Text style={s.fareTotalLabel}>Total</Text>
-            <Text style={s.fareTotalVal}>${grandTotal} {fare.currency}</Text>
+            <Text style={s.fareTotalVal}>{currencyService.format(grandTotal)}</Text>
           </View>
           <TouchableOpacity
             style={[s.proceedBtn, loading && { opacity: 0.7 }]}
