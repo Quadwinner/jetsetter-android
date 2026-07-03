@@ -36,21 +36,57 @@ export const getStopsBadge = (stops) => {
   return { label: `${stops}+ Stops`, color: '#991B1B', bg: '#FEE2E2' };
 };
 
-export const calculateFare = (flightOffer, passengerCount = 1, addons = [], couponDiscount = 0) => {
-  const grandTotal = parseFloat(flightOffer?.price?.grandTotal || flightOffer?.price?.total || 0);
-  const baseFare = grandTotal * passengerCount;
-  const fixedTax = 25;
-  const percentTax = (baseFare * 5) / 100;
-  const taxes = (fixedTax + percentTax) * passengerCount;
+/**
+ * Build the fare breakdown exactly like the website's booking page:
+ *   - Base Fare           = real Amadeus base (price.base) × passengers
+ *   - Taxes & Surcharges  = (grandTotal − base) × passengers   (real airline taxes)
+ *   - Service Fee         = (taxesFees + grandTotal × taxesFeesPercentage%) × passengers
+ *                           — the admin-configured "Jetsetters convenience fee"
+ *   - Add-ons, Seats, Discount
+ *
+ * Fees are NOT hardcoded: pass `opts.config` from
+ * flightService.getFlightPricingConfig() ({ taxesFees, taxesFeesPercentage }),
+ * which comes from the admin panel via /admin/price-config/flights.
+ * opts.seatFee (already in the offer's currency) is folded into the total here.
+ */
+export const calculateFare = (flightOffer, passengerCount = 1, addons = [], couponDiscount = 0, opts = {}) => {
+  const price = flightOffer?.price || {};
+  const orig = flightOffer?.originalOffer?.price || {};
+
+  const fareTotal = parseFloat(
+    price.grandTotal || price.amount || price.total || orig.grandTotal || orig.total || 0
+  );
+  const amaBase = parseFloat(price.base || orig.base || 0);
+  const perPassengerBase = amaBase > 0 && amaBase <= fareTotal ? amaBase : fareTotal;
+  const perPassengerTax = Math.max(0, fareTotal - perPassengerBase);
+
+  // Admin-configured platform service fee (from /admin/price-config/flights).
+  const cfg = opts.config || {};
+  const serviceFixed = Number(cfg.taxesFees) || 0;
+  const servicePercent = Number(cfg.taxesFeesPercentage) || 0;
+  const perPassengerServiceFee = serviceFixed + (fareTotal * servicePercent) / 100;
+
+  const count = Math.max(1, passengerCount);
+  const baseFare = perPassengerBase * count;
+  const taxes = perPassengerTax * count;
+  const serviceFee = perPassengerServiceFee * count;
+
   const addonsTotal = addons.reduce((sum, a) => sum + (a.price || 0), 0);
-  const total = Math.max(0, baseFare + taxes + addonsTotal - couponDiscount);
+  const seatFee = Number(opts.seatFee) || 0;
+  const discount = Number(couponDiscount) || 0;
+
+  const total = Math.max(0, baseFare + taxes + serviceFee + addonsTotal + seatFee - discount);
 
   return {
     baseFare: baseFare.toFixed(2),
+    perPassengerBase: perPassengerBase.toFixed(2),
     taxes: taxes.toFixed(2),
+    serviceFee: serviceFee.toFixed(2),
     addonsTotal: addonsTotal.toFixed(2),
-    couponDiscount: couponDiscount.toFixed(2),
+    seatFee: seatFee.toFixed(2),
+    couponDiscount: discount.toFixed(2),
+    passengerCount: count,
     totalAmount: total.toFixed(2),
-    currency: flightOffer?.price?.currency || 'USD',
+    currency: price.currency || orig.currency || 'USD',
   };
 };

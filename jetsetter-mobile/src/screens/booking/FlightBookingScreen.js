@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
   Alert, ActivityIndicator, StyleSheet, Platform,
@@ -42,6 +42,21 @@ export default function FlightBookingScreen({ route, navigation }) {
   const [couponLoading, setCouponLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  // Admin-configured taxes/fees (from the panel via /admin/price-config/flights).
+  // null until loaded → service fee shows once config arrives; never hardcoded.
+  const [pricingConfig, setPricingConfig] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    flightService.getFlightPricingConfig()
+      .then((cfg) => { if (alive) setPricingConfig(cfg); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  // Seat fees (in the offer's currency) chosen on the seat map.
+  const seatFee = selectedSeats.reduce((sum, x) => sum + (x.price || 0), 0);
+  const fareOpts = { config: pricingConfig, seatFee };
 
   const updatePassenger = (idx, field, val) => {
     const updated = [...passengers];
@@ -61,7 +76,7 @@ export default function FlightBookingScreen({ route, navigation }) {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
     try {
-      const fare = calculateFare(selectedFlight, count, selectedAddons, 0);
+      const fare = calculateFare(selectedFlight, count, selectedAddons, 0, fareOpts);
       const result = await flightService.validateCoupon(couponCode.trim(), parseFloat(fare.totalAmount), null);
       if (result.success) {
         setAppliedCoupon(result);
@@ -97,9 +112,9 @@ export default function FlightBookingScreen({ route, navigation }) {
     }
     setLoading(true);
     try {
-      const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0);
-      const seatFee = selectedSeats.reduce((sum, x) => sum + (x.price || 0), 0);
-      const totalAmount = parseFloat(fare.totalAmount) + seatFee;
+      // fare.totalAmount already includes seat fees + admin service fee (via fareOpts).
+      const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0, fareOpts);
+      const totalAmount = parseFloat(fare.totalAmount);
       const orderId = flightService.generateOrderId();
 
       const bookingData = {
@@ -145,9 +160,9 @@ export default function FlightBookingScreen({ route, navigation }) {
     }
   };
 
-  const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0);
-  const seatFeeDisplay = selectedSeats.reduce((a, x) => a + (x.price || 0), 0);
-  const grandTotal = (parseFloat(fare.totalAmount) + seatFeeDisplay).toFixed(2);
+  const fare = calculateFare(selectedFlight, count, selectedAddons, appliedCoupon?.discountAmount || 0, fareOpts);
+  const seatFeeDisplay = seatFee; // already folded into fare.totalAmount
+  const grandTotal = fare.totalAmount;
 
   return (
     <View style={{ flex: 1, backgroundColor: THEME.pageBg }}>
@@ -349,16 +364,46 @@ export default function FlightBookingScreen({ route, navigation }) {
       <View style={[s.fareCard, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <LinearGradient colors={[THEME.primary, THEME.primaryDark]} style={s.fareGradient}>
           <Text style={s.fareTitle}>Fare Summary</Text>
-          <View style={s.fareLine}><Text style={s.fareLabel}>Base Fare ({count}x)</Text><Text style={s.fareVal}>{currencyService.format(fare.baseFare)}</Text></View>
-          <View style={s.fareLine}><Text style={s.fareLabel}>Taxes & Fees</Text><Text style={s.fareVal}>{currencyService.format(fare.taxes)}</Text></View>
+
+          {/* Base Fare — real airline base × passengers */}
+          <View style={s.fareLine}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.fareLabel}>Base Fare</Text>
+              <Text style={s.fareSub}>{count} × {currencyService.format(fare.perPassengerBase)}</Text>
+            </View>
+            <Text style={s.fareVal}>{currencyService.format(fare.baseFare)}</Text>
+          </View>
+
+          {/* Real airline taxes & surcharges (grandTotal − base) */}
+          {parseFloat(fare.taxes) > 0 && (
+            <View style={s.fareLine}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fareLabel}>Taxes & Surcharges</Text>
+                <Text style={s.fareSub}>Airline taxes & surcharges</Text>
+              </View>
+              <Text style={s.fareVal}>{currencyService.format(fare.taxes)}</Text>
+            </View>
+          )}
+
+          {/* Admin-configured convenience fee */}
+          {parseFloat(fare.serviceFee) > 0 && (
+            <View style={s.fareLine}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fareLabel}>Service Fee</Text>
+                <Text style={s.fareSub}>Jetsetters convenience fee</Text>
+              </View>
+              <Text style={s.fareVal}>{currencyService.format(fare.serviceFee)}</Text>
+            </View>
+          )}
+
           {parseFloat(fare.addonsTotal) > 0 && (
             <View style={s.fareLine}><Text style={s.fareLabel}>Add-ons</Text><Text style={s.fareVal}>{currencyService.format(fare.addonsTotal)}</Text></View>
           )}
-          {parseFloat(fare.couponDiscount) > 0 && (
-            <View style={s.fareLine}><Text style={s.fareLabel}>Discount</Text><Text style={[s.fareVal, { color: '#6EE7B7' }]}>-{currencyService.format(fare.couponDiscount)}</Text></View>
-          )}
           {seatFeeDisplay > 0 && (
             <View style={s.fareLine}><Text style={s.fareLabel}>Seats ({selectedSeats.length})</Text><Text style={s.fareVal}>{currencyService.format(seatFeeDisplay)}</Text></View>
+          )}
+          {parseFloat(fare.couponDiscount) > 0 && (
+            <View style={s.fareLine}><Text style={s.fareLabel}>Discount</Text><Text style={[s.fareVal, { color: '#6EE7B7' }]}>-{currencyService.format(fare.couponDiscount)}</Text></View>
           )}
           <View style={[s.fareLine, s.fareTotal]}>
             <Text style={s.fareTotalLabel}>Total</Text>
@@ -415,8 +460,9 @@ const s = StyleSheet.create({
   fareCard: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   fareGradient: { padding: 18 },
   fareTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 10 },
-  fareLine: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  fareLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  fareLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+  fareLabel: { fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: '600' },
+  fareSub: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 },
   fareVal: { fontSize: 13, color: '#fff', fontWeight: '600' },
   fareTotal: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.3)', paddingTop: 10, marginTop: 4 },
   fareTotalLabel: { fontSize: 15, fontWeight: '700', color: '#fff' },

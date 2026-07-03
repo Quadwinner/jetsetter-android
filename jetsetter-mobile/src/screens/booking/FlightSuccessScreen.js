@@ -117,7 +117,10 @@ export default function FlightSuccessScreen({ route, navigation }) {
           <View style={s.paySection}>
             <Text style={s.passSectionTitle}>Payment Summary</Text>
             {fare.baseFare && <View style={s.payRow}><Text style={s.payLabel}>Base Fare</Text><Text style={s.payVal}>{currencyService.format(fare.baseFare)}</Text></View>}
-            {fare.taxes && <View style={s.payRow}><Text style={s.payLabel}>Taxes & Fees</Text><Text style={s.payVal}>{currencyService.format(fare.taxes)}</Text></View>}
+            {parseFloat(fare.taxes) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Taxes & Surcharges</Text><Text style={s.payVal}>{currencyService.format(fare.taxes)}</Text></View>}
+            {parseFloat(fare.serviceFee) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Service Fee</Text><Text style={s.payVal}>{currencyService.format(fare.serviceFee)}</Text></View>}
+            {parseFloat(fare.addonsTotal) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Add-ons</Text><Text style={s.payVal}>{currencyService.format(fare.addonsTotal)}</Text></View>}
+            {parseFloat(fare.seatFee) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Seats</Text><Text style={s.payVal}>{currencyService.format(fare.seatFee)}</Text></View>}
             {parseFloat(fare.couponDiscount) > 0 && <View style={s.payRow}><Text style={s.payLabel}>Discount</Text><Text style={[s.payVal, { color: THEME.success }]}>-{currencyService.format(fare.couponDiscount)}</Text></View>}
             <View style={[s.payRow, s.payTotal]}>
               <Text style={s.payTotalLabel}>Total Paid</Text>
