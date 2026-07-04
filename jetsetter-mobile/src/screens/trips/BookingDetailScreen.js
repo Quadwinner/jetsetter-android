@@ -269,8 +269,21 @@ const BookingDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const isCancelled = booking.status === 'CANCELLED';
-  const canModify = !isCancelled && booking.status === 'CONFIRMED';
+  const statusUp = (booking.status || '').toUpperCase();
+  const isCancelled = statusUp === 'CANCELLED' || statusUp === 'FAILED';
+  // A booking is "past" if its travel date is before today (no date => upcoming).
+  const _travelDate = booking.type === 'hotel'
+    ? (booking.checkinDate || booking.checkInDate)
+    : booking.type === 'cruise'
+      ? booking.cruiseDepartureDate
+      : (booking.departureDate || booking.startDate || booking.travelDate);
+  let isPast = false;
+  if (_travelDate) {
+    const t = new Date(_travelDate); const today = new Date();
+    today.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
+    isPast = t < today;
+  }
+  const canModify = !isCancelled && !isPast && (statusUp === 'CONFIRMED' || booking.status === 'paid');
 
   return (
     <View style={styles.container}>
@@ -371,7 +384,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
       </ScrollView>
 
       {/* Action Buttons */}
-      {!isCancelled && (
+      {!isCancelled && !isPast && (
         <View style={styles.footer}>
           {canModify && (
             <TouchableOpacity

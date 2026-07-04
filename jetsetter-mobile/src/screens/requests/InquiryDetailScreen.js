@@ -14,57 +14,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MyTripsService from '../../services/MyTripsService';
 import BookingInfoService from '../../services/BookingInfoService';
 import { COLORS } from '../../constants/config';
+import { useInquiry } from '../../hooks/queries';
 
 const InquiryDetailScreen = ({ route, navigation }) => {
   const { inquiryId } = route.params;
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(true);
-  const [inquiry, setInquiry] = useState(null);
+  const { data: inquiry, isLoading: loading, isError, error } = useInquiry(inquiryId);
 
+  // Preserve the old behavior: on load failure, alert and go back.
   useEffect(() => {
-    loadInquiry();
-  }, [inquiryId]);
-
-  const loadInquiry = async () => {
-    try {
-      setLoading(true);
-      console.log('📥 Loading inquiry with ID:', inquiryId);
-      
-      if (!inquiryId) {
-        throw new Error('No inquiry ID provided');
-      }
-      
-      const result = await MyTripsService.getInquiryById(inquiryId);
-      console.log('📦 Received result:', JSON.stringify(result, null, 2));
-      
-      // Handle different response structures
-      let inquiryData = null;
-      
-      if (result?.success && result?.data) {
-        inquiryData = result.data;
-      } else if (result?.id || result?.inquiry_type) {
-        // Result is the inquiry object directly
-        inquiryData = result;
-      } else if (result?.data?.id || result?.data?.inquiry_type) {
-        inquiryData = result.data;
-      }
-      
-      if (inquiryData && (inquiryData.id || inquiryData.inquiry_type)) {
-        console.log('✅ Inquiry loaded successfully:', inquiryData.id);
-        setInquiry(inquiryData);
-      } else {
-        console.error('❌ Invalid inquiry data:', result);
-        throw new Error('Invalid inquiry data received');
-      }
-    } catch (error) {
-      console.error('❌ Load inquiry error:', error);
-      console.error('Error details:', error.message, error.stack);
-      Alert.alert('Error', error.message || 'Failed to load inquiry details');
+    if (isError) {
+      Alert.alert('Error', error?.message || 'Failed to load inquiry details');
       navigation.goBack();
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isError]);
 
   const handlePayQuote = async (quote) => {
     try {

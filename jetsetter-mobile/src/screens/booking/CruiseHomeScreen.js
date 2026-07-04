@@ -29,32 +29,14 @@ export default function CruiseHomeScreen({ navigation }) {
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    setLoading(true);
-    try {
-      const searchParams = { 
-        destination: destination || undefined, 
-        departurePort: departurePort || undefined, 
-        date: date || undefined 
-      };
-      
-      const result = await cruiseService.searchCruises(searchParams);
-      
-      if (result.success && result.cruises?.length > 0) {
-        navigation.navigate('CruiseResults', { 
-          cruises: result.cruises,
-          searchParams 
-        });
-      } else if (result.success && result.cruises?.length === 0) {
-        Alert.alert('No Cruises Found', 'No cruises available for the selected criteria. Please try different search parameters.');
-      } else {
-        Alert.alert('Search Failed', result.error || 'Unable to search cruises. Please try again.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = () => {
+    // The results screen owns the search via useCruiseSearch(searchParams).
+    const searchParams = {
+      destination: destination || undefined,
+      departurePort: departurePort || undefined,
+      date: date || undefined,
+    };
+    navigation.navigate('CruiseResults', { searchParams });
   };
 
   const selectDestination = (dest) => {
