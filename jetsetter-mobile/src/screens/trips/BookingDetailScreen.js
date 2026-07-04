@@ -337,10 +337,10 @@ const BookingDetailScreen = ({ route, navigation }) => {
                 {formatPrice(booking.amount || booking.totalAmount, booking.currency || 'USD')}
               </Text>
             </View>
-            {booking.payment?.transactionId && (
+            {(booking.transactionId || booking.payment?.transactionId) && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Transaction ID</Text>
-                <Text style={styles.detailValue}>{booking.payment.transactionId}</Text>
+                <Text style={styles.detailValue}>{booking.transactionId || booking.payment.transactionId}</Text>
               </View>
             )}
             {booking.payment?.status && (
