@@ -79,10 +79,32 @@ class MyTripsService {
   }
 
   /**
-   * Completed bookings the app saved on-device. (Server-side booking
-   * persistence is Phase 0.2 — until then these come from AsyncStorage.)
+   * Completed bookings for the signed-in user — fetched from the SAME backend
+   * endpoint the website uses (GET /flights/bookings?userId=...), so bookings
+   * made on web or app appear on both. Matches by the user id (which equals the
+   * Supabase auth uid). Falls back to any on-device bookings if the call fails.
    */
   async getMyBookings() {
+    try {
+      const user = await getStoredUser();
+      const userId = user?.id || user?.uid;
+      if (!userId) return { success: true, data: await this._localBookings() };
+
+      const res = await myTripsApi.get('/flights/bookings', { params: { userId } });
+      const data = res.data?.data || res.data?.bookings || [];
+      const server = Array.isArray(data) ? data : [];
+      if (server.length > 0) return { success: true, data: server };
+
+      // No server rows — surface any on-device bookings as a fallback.
+      return { success: true, data: await this._localBookings() };
+    } catch (error) {
+      console.error('❌ getMyBookings error:', error.response?.status, error.message);
+      return { success: true, data: await this._localBookings() };
+    }
+  }
+
+  /** On-device booking cache (fallback only). */
+  async _localBookings() {
     const results = [];
     try {
       const keys = ['completedBooking', 'completedHotelBooking', 'completedFlightBooking'];
@@ -93,7 +115,7 @@ class MyTripsService {
         }
       }
     } catch (_) { /* ignore */ }
-    return { success: true, data: results };
+    return results;
   }
 
   /**
