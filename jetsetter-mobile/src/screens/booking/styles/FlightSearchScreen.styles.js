@@ -11,11 +11,11 @@ export default StyleSheet.create({
   // Enhanced Hero Section matching JETSET13
   heroContainer: {
     width: '100%',
-    minHeight: 300,
-    justifyContent: 'center',
-    paddingTop: 24,
+    justifyContent: 'flex-start',
+    paddingTop: 40,
     paddingBottom: 56, // room for the trip-type pill overlapping the bottom
     backgroundColor: '#FFFFFF',
+    overflow: 'visible',
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -54,18 +54,18 @@ export default StyleSheet.create({
     marginBottom: 16,
   },
   heroTitleDark: {
-    fontSize: 42,
+    fontSize: 34,
     fontWeight: '800',
     color: '#111827', // text-gray-900
     textAlign: 'center',
-    lineHeight: 48,
+    lineHeight: 40,
   },
   heroTitleHighlight: {
-    fontSize: 42,
+    fontSize: 34,
     fontWeight: '800',
     color: '#055B75', // teal
     textAlign: 'center',
-    lineHeight: 48,
+    lineHeight: 40,
   },
   heroSubtitle: {
     fontSize: 16,
