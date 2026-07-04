@@ -159,23 +159,46 @@ const BookingDetailScreen = ({ route, navigation }) => {
   };
 
   const renderHotelDetails = () => {
-    const hotel = booking.hotel;
+    const hotel = booking.hotel || {};
+    const name = booking.hotelName || hotel.name || 'Hotel';
+    const location = booking.location || booking.hotelDestination || hotel.address || '';
+    const checkIn = booking.checkinDate || booking.checkInDate || hotel.checkInDate;
+    const checkOut = booking.checkoutDate || booking.checkOutDate || hotel.checkOutDate;
+    const fmt = (d) => { try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return d; } };
     return (
       <View style={styles.detailsSection}>
         <Text style={styles.sectionTitle}>Hotel Details</Text>
         <View style={styles.detailCard}>
-          <Text style={styles.hotelName}>{hotel?.name || 'Hotel'}</Text>
-          <Text style={styles.address}>{hotel?.address || 'Address not available'}</Text>
-          {booking.checkInDate && (
+          <Text style={styles.hotelName}>{name}</Text>
+          {!!location && <Text style={styles.address}>{location}</Text>}
+          {!!booking.roomType && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Check-in</Text>
-              <Text style={styles.detailValue}>{booking.checkInDate}</Text>
+              <Text style={styles.detailLabel}>Room</Text>
+              <Text style={styles.detailValue}>{booking.roomType}</Text>
             </View>
           )}
-          {booking.checkOutDate && (
+          {!!checkIn && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Check-in</Text>
+              <Text style={styles.detailValue}>{fmt(checkIn)}</Text>
+            </View>
+          )}
+          {!!checkOut && (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Check-out</Text>
-              <Text style={styles.detailValue}>{booking.checkOutDate}</Text>
+              <Text style={styles.detailValue}>{fmt(checkOut)}</Text>
+            </View>
+          )}
+          {!!(booking.nights) && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Nights</Text>
+              <Text style={styles.detailValue}>{booking.nights}</Text>
+            </View>
+          )}
+          {!!(booking.guests || booking.hotelGuests) && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Guests</Text>
+              <Text style={styles.detailValue}>{booking.guests || booking.hotelGuests}</Text>
             </View>
           )}
         </View>

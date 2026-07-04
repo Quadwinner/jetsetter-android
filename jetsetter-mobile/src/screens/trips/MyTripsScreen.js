@@ -124,8 +124,14 @@ const MyTripsScreen = ({ navigation }) => {
     if (activeTab === 'Requests') {
       return inquiries;
     }
-    const allBookings = bookings;
-    return filterItems(allBookings, activeTab);
+    let list = filterItems(bookings, activeTab);
+    // Apply the type chip (All / Flights / Hotels / Cruise / Packages)
+    if (activeFilter !== 'All') {
+      const typeMap = { Flights: 'flight', Hotels: 'hotel', Cruise: 'cruise', Packages: 'package' };
+      const target = typeMap[activeFilter];
+      if (target) list = list.filter((b) => b.type === target);
+    }
+    return list;
   };
 
   const displayItems = getDisplayItems();
