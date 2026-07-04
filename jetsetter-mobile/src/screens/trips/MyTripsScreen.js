@@ -319,7 +319,7 @@ const MyTripsScreen = ({ navigation }) => {
               <Ionicons name={typeInfo.icon} size={24} color={typeInfo.color} />
             </View>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.bookingTitle}>{typeInfo.label} Booking</Text>
+              <Text style={styles.bookingTitle}>{booking.hotelName || booking.cruiseName || (booking.airlineName ? booking.airlineName + ' Flight' : typeInfo.label + ' Booking')}</Text>
               <Text style={styles.bookingId}>
                 {booking.pnr || booking.orderId || booking.bookingReference || booking.bookingId}
               </Text>
@@ -345,6 +345,42 @@ const MyTripsScreen = ({ navigation }) => {
             </Text>
           </View>
 
+          {booking.type === 'hotel' && !!(booking.location || booking.hotelDestination) && (
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={16} color="#6B7280" />
+              <Text style={styles.infoLabel}>Location</Text>
+              <Text style={styles.infoValue}>{booking.location || booking.hotelDestination}</Text>
+            </View>
+          )}
+          {booking.type === 'hotel' && !!booking.checkinDate && (
+            <View style={styles.infoRow}>
+              <Ionicons name="log-in-outline" size={16} color="#6B7280" />
+              <Text style={styles.infoLabel}>Check-in</Text>
+              <Text style={styles.infoValue}>{((d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))(booking.checkinDate)}</Text>
+            </View>
+          )}
+          {booking.type === 'hotel' && !!booking.checkoutDate && (
+            <View style={styles.infoRow}>
+              <Ionicons name="log-out-outline" size={16} color="#6B7280" />
+              <Text style={styles.infoLabel}>Check-out</Text>
+              <Text style={styles.infoValue}>{((d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))(booking.checkoutDate)}</Text>
+            </View>
+          )}
+          {(booking.type === 'flight' || booking.type === 'cruise') && !!(booking.origin || booking.destination || booking.cruiseDeparture || booking.cruiseArrival) && (
+            <View style={styles.infoRow}>
+              <Ionicons name="navigate-outline" size={16} color="#6B7280" />
+              <Text style={styles.infoLabel}>Route</Text>
+              <Text style={styles.infoValue}>{(booking.origin || booking.cruiseDeparture || 'N/A')} → {(booking.destination || booking.cruiseArrival || 'N/A')}</Text>
+            </View>
+          )}
+          {booking.type === 'flight' && !!booking.departureDate && (
+            <View style={styles.infoRow}>
+              <Ionicons name="airplane-outline" size={16} color="#6B7280" />
+              <Text style={styles.infoLabel}>Departure</Text>
+              <Text style={styles.infoValue}>{((d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))(booking.departureDate)}</Text>
+            </View>
+          )}
+
           {booking.amount && (
             <View style={styles.infoRow}>
               <Ionicons name="cash-outline" size={16} color="#6B7280" />
@@ -353,11 +389,11 @@ const MyTripsScreen = ({ navigation }) => {
             </View>
           )}
 
-          {booking.payment?.transactionId && (
+          {(booking.transactionId || booking.payment?.transactionId) && (
             <View style={styles.infoRow}>
               <Ionicons name="card-outline" size={16} color="#6B7280" />
               <Text style={styles.infoLabel}>Transaction</Text>
-              <Text style={styles.infoValue}>{booking.payment.transactionId}</Text>
+              <Text style={styles.infoValue}>{booking.transactionId || booking.payment.transactionId}</Text>
             </View>
           )}
         </View>
