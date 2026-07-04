@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import flightService from '../../services/flightService';
+import { useSeatMap } from '../../hooks/queries';
 
 /**
  * FlightSeatMapScreen — interactive seat map from /flights/seatmaps.
@@ -13,19 +14,10 @@ import flightService from '../../services/flightService';
  */
 export default function FlightSeatMapScreen({ route, navigation }) {
   const { selectedFlight, passengerCount = 1, preselected = [], onSeatsSelected } = route.params || {};
-  const [loading, setLoading] = useState(true);
-  const [seats, setSeats] = useState([]);
-  const [available, setAvailable] = useState(false);
+  const { data: seatData, isLoading: loading } = useSeatMap(selectedFlight?.originalOffer);
+  const seats = seatData?.seats || [];
+  const available = seatData?.success || false;
   const [selected, setSelected] = useState(preselected.map((s) => s.number));
-
-  useEffect(() => {
-    (async () => {
-      const res = await flightService.getSeatMap(selectedFlight?.originalOffer);
-      setSeats(res.seats);
-      setAvailable(res.success);
-      setLoading(false);
-    })();
-  }, []);
 
   // Group seats by row; derive the column list + an aisle split.
   const { rows, columns, aisleAfter } = useMemo(() => {

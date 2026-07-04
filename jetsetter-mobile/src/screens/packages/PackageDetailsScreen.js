@@ -1,22 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import packageService from '../../services/packageService';
+import { usePackageDetails } from '../../hooks/queries';
 
 const PackageDetailsScreen = ({ route, navigation }) => {
   const { packageId } = route.params;
   const insets = useSafeAreaInsets();
-  const [pkg, setPkg] = useState(null);
-
-  useEffect(() => {
-    loadDetails();
-  }, []);
-
-  const loadDetails = async () => {
-    const result = await packageService.getPackageDetails(packageId);
-    if (result.success) setPkg(result.package);
-  };
+  const { data: pkg } = usePackageDetails(packageId);
 
   if (!pkg) return null;
 

@@ -12,6 +12,7 @@ import flightService from '../../services/flightService';
 import currencyService from '../../services/currencyService';
 import { ADDON_LIST, THEME } from '../../constants/flightConstants';
 import { calculateFare, formatTime, parseDuration } from '../../utils/flightUtils';
+import { useFlightPricingConfig } from '../../hooks/queries';
 
 export default function FlightBookingScreen({ route, navigation }) {
   const { selectedFlight, searchParams } = route.params;
@@ -42,17 +43,9 @@ export default function FlightBookingScreen({ route, navigation }) {
   const [couponLoading, setCouponLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  // Admin-configured taxes/fees (from the panel via /admin/price-config/flights).
+  // Admin-configured taxes/fees (from the panel via /admin/price-settings).
   // null until loaded → service fee shows once config arrives; never hardcoded.
-  const [pricingConfig, setPricingConfig] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    flightService.getFlightPricingConfig()
-      .then((cfg) => { if (alive) setPricingConfig(cfg); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
+  const { data: pricingConfig = null } = useFlightPricingConfig();
 
   // Seat fees (in the offer's currency) chosen on the seat map.
   const seatFee = selectedSeats.reduce((sum, x) => sum + (x.price || 0), 0);

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import flightService from '../../services/flightService';
+import { useFareRules, useFareOptions } from '../../hooks/queries';
 
 /**
  * FlightDetailsScreen — proper flight detail between Results and Booking:
@@ -15,50 +16,41 @@ export default function FlightDetailsScreen({ route, navigation }) {
   const dep = flight.departure || {};
   const arr = flight.arrival || {};
 
-  const [rules, setRules] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [fareOptions, setFareOptions] = useState([]);
+  const { data: rules, isLoading: rulesLoading } = useFareRules(flight.originalOffer);
+  const { data: fo, isLoading: foLoading } = useFareOptions(flight.originalOffer);
+  const loading = rulesLoading || foLoading;
   const [selectedFareId, setSelectedFareId] = useState('base');
 
-  useEffect(() => {
-    (async () => {
-      const [fr, fo] = await Promise.all([
-        flightService.getFareRules(flight.originalOffer),
-        flightService.getFareOptions(flight.originalOffer),
-      ]);
-      setRules(fr);
-
-      const base = {
-        id: 'base',
-        label: flight.brandedFareLabel || 'Standard',
-        price: parseFloat(flight.price?.total || flight.price?.amount || 0) || 0,
-        currency: flight.price?.currency || 'USD',
-        refundable: flight.refundable,
-        baggage: flight.baggage,
-        cabin: flight.cabin,
-      };
-      const upsells = (fo.options || []).map((o, i) => ({
-        id: o.id || `up${i}`,
-        label: o.brandedFareLabel || o.brandedFare || o.cabin || `Fare ${i + 1}`,
-        price: parseFloat(o.price?.total || o.price?.amount || 0) || 0,
-        currency: o.price?.currency || 'USD',
-        refundable: o.refundable,
-        baggage: o.baggageDetails?.checked?.weight
-          ? `${o.baggageDetails.checked.weight} ${o.baggageDetails.checked.weightUnit || 'KG'}`
-          : o.baggage || null,
-        cabin: o.cabin,
-      }));
-      const seen = new Set();
-      const merged = [base, ...upsells].filter((o) => {
-        const k = `${o.label}-${o.price}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
-      setFareOptions(merged);
-      setLoading(false);
-    })();
-  }, []);
+  // Branded fare options = base fare + de-duped upsells from /flights/upsell.
+  const fareOptions = useMemo(() => {
+    const base = {
+      id: 'base',
+      label: flight.brandedFareLabel || 'Standard',
+      price: parseFloat(flight.price?.total || flight.price?.amount || 0) || 0,
+      currency: flight.price?.currency || 'USD',
+      refundable: flight.refundable,
+      baggage: flight.baggage,
+      cabin: flight.cabin,
+    };
+    const upsells = (fo?.options || []).map((o, i) => ({
+      id: o.id || `up${i}`,
+      label: o.brandedFareLabel || o.brandedFare || o.cabin || `Fare ${i + 1}`,
+      price: parseFloat(o.price?.total || o.price?.amount || 0) || 0,
+      currency: o.price?.currency || 'USD',
+      refundable: o.refundable,
+      baggage: o.baggageDetails?.checked?.weight
+        ? `${o.baggageDetails.checked.weight} ${o.baggageDetails.checked.weightUnit || 'KG'}`
+        : o.baggage || null,
+      cabin: o.cabin,
+    }));
+    const seen = new Set();
+    return [base, ...upsells].filter((o) => {
+      const k = `${o.label}-${o.price}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [fo, flight]);
 
   const selectedFare = fareOptions.find((o) => o.id === selectedFareId) || fareOptions[0];
   const currency = selectedFare?.currency || flight.price?.currency || 'USD';

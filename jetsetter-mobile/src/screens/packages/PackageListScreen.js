@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import packageService from '../../services/packageService';
+import { usePackageSearch } from '../../hooks/queries';
 
 const PackageListScreen = ({ navigation }) => {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadPackages();
-  }, []);
-
-  const loadPackages = async () => {
-    const result = await packageService.searchPackages();
-    if (result.success) setPackages(result.packages);
-    setLoading(false);
-  };
+  const { data, isLoading: loading } = usePackageSearch({});
+  const packages = data?.packages || [];
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>

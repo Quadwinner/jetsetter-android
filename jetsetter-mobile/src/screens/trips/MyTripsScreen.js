@@ -255,8 +255,11 @@ const MyTripsScreen = ({ navigation }) => {
   const renderBookingCard = (booking) => {
     const typeInfo = getBookingTypeInfo(booking.type);
     const bookingDate = new Date(booking.bookingDate || booking.orderCreatedAt);
-    const isCancelled = booking.status === 'CANCELLED';
-    const canModify = !isCancelled && booking.status === 'CONFIRMED';
+    const statusUp = (booking.status || '').toUpperCase();
+    const isCancelled = statusUp === 'CANCELLED' || statusUp === 'FAILED';
+    const isPast = isTravelDatePast(booking);
+    // Can only modify/cancel an active (non-cancelled) trip that hasn't happened yet.
+    const canModify = !isCancelled && !isPast && (statusUp === 'CONFIRMED' || booking.status === 'paid');
 
     return (
       <TouchableOpacity
@@ -380,7 +383,7 @@ const MyTripsScreen = ({ navigation }) => {
               </TouchableOpacity>
             </>
           )}
-          {!isCancelled && (
+          {!isCancelled && !isPast && (
             <>
               <View style={styles.actionDivider} />
               <TouchableOpacity 
