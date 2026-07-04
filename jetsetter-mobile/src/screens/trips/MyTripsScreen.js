@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MyTripsService from '../../services/MyTripsService';
 import currencyService from '../../services/currencyService';
 import BookingInfoService from '../../services/BookingInfoService';
+import { useMyTrips } from '../../hooks/queries';
 import styles from './styles/MyTripsScreen.styles';
 
 const MyTripsScreen = ({ navigation }) => {
@@ -22,70 +23,24 @@ const MyTripsScreen = ({ navigation }) => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [isGuest, setIsGuest] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [bookings, setBookings] = useState([]);
-  const [inquiries, setInquiries] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // Load trips from backend
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 Loading trips from backend...');
-      const [inquiriesData, bookingsData] = await Promise.all([
-        MyTripsService.getMyInquiries().catch((err) => {
-          console.error('Error fetching inquiries:', err);
-          return { success: false, data: [] };
-        }),
-        MyTripsService.getMyBookings().catch((err) => {
-          console.error('Error fetching bookings:', err);
-          return { success: false, data: [] };
-        }),
-      ]);
+  // Trips (bookings + inquiries) via TanStack Query; the hook normalizes the
+  // various response shapes. See src/hooks/queries/useTrips.js.
+  const { data, isLoading: loading, isRefetching, refetch } = useMyTrips();
+  const bookings = data?.bookings || [];
+  const inquiries = data?.inquiries || [];
+  const refreshing = isRefetching;
 
-      // Handle inquiries - check multiple response structures
-      let inquiriesList = [];
-      if (inquiriesData.success) {
-        inquiriesList = inquiriesData.data || inquiriesData.inquiries || [];
-        setInquiries(Array.isArray(inquiriesList) ? inquiriesList : []);
-        console.log('✅ Loaded inquiries:', inquiriesList.length);
-      } else {
-        console.log('⚠️ No inquiries loaded');
-        setInquiries([]);
-      }
-      
-      // Handle bookings
-      let bookingsList = [];
-      if (bookingsData.success) {
-        bookingsList = bookingsData.data || bookingsData.bookings || [];
-        setBookings(Array.isArray(bookingsList) ? bookingsList : []);
-        console.log('✅ Loaded bookings:', bookingsList.length);
-      } else {
-        console.log('⚠️ No bookings loaded');
-        setBookings([]);
-      }
-      
-      console.log('📋 Final count - Inquiries:', inquiriesList.length, 'Bookings:', bookingsList.length);
-    } catch (error) {
-      console.error('Error loading trips:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Load data when screen is focused
+  // Refetch when the screen regains focus (mirrors the old useFocusEffect).
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [loadData])
+      refetch();
+    }, [refetch])
   );
 
-  // Refresh data
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  }, [loadData]);
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Resolve a booking's travel date (mirrors the web My Trips logic).
   const getTravelDate = (b) => {

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import hotelService from '../../services/hotelService';
+import { useHotelSearch } from '../../hooks/queries';
 import styles from './styles/HotelResultsScreen.styles';
 
 const HotelResultsScreen = ({ route, navigation }) => {
-  const { hotels, searchParams } = route.params;
-  
-  console.log('🏨 HotelResultsScreen loaded with:', {
-    hotelsCount: hotels?.length,
-    hotels: hotels?.map(h => ({ name: h.name, id: h.hotelId })),
-    searchParams
-  });
+  // New flow: search screen passes `apiParams` and this screen owns the query.
+  // Legacy fallback: `hotels` passed directly.
+  const { searchParams, apiParams, hotels: passedHotels } = route.params;
+  const hotelQuery = useHotelSearch(apiParams, { enabled: !passedHotels && !!apiParams });
+  const hotels = passedHotels ?? hotelQuery.data?.hotels ?? [];
+  const isLoading = !passedHotels && hotelQuery.isLoading && hotelQuery.isFetching;
+  const isError = !passedHotels && hotelQuery.isError;
   const [sortBy, setSortBy] = useState('price');
 
   // Backend returns a flat hotel (price/currency/location), not an offers array.
@@ -76,6 +77,23 @@ const HotelResultsScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+          <ActivityIndicator size="large" color="#0891b2" />
+          <Text style={{ marginTop: 12, color: '#64748B' }}>Searching hotels…</Text>
+        </View>
+      ) : isError ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+          <Ionicons name="cloud-offline-outline" size={40} color="#94A3B8" />
+          <Text style={{ marginTop: 12, color: '#64748B', textAlign: 'center' }}>
+            {hotelQuery.error?.message || "Couldn't load hotels."}
+          </Text>
+          <TouchableOpacity style={{ marginTop: 16 }} onPress={() => hotelQuery.refetch()}>
+            <Text style={{ color: '#0891b2', fontWeight: '700' }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+      <>
       <Text style={styles.resultsCount}>{sortedHotels.length} hotels found</Text>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -130,6 +148,8 @@ const HotelResultsScreen = ({ route, navigation }) => {
         ))}
         <View style={styles.bottomPadding} />
       </ScrollView>
+      </>
+      )}
     </View>
   );
 };

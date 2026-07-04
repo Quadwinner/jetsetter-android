@@ -176,10 +176,10 @@ const FlightSearchScreen = ({ navigation }) => {
     const fromCode = flightService.extractIataCode(fromCity);
     const toCode = flightService.extractIataCode(toCity);
 
-    setLoading(true);
-
-    try {
-      const result = await flightService.searchFlights({
+    // The results screen owns the search via useFlightSearch(apiParams) — it
+    // shows loading/empty/error and caches results (instant back-navigation).
+    navigation.navigate('FlightResults', {
+      apiParams: {
         from: fromCode,
         to: toCode,
         departDate,
@@ -187,39 +187,17 @@ const FlightSearchScreen = ({ navigation }) => {
         tripType,
         travelers: String(travelers), // JETSET13 sends as string
         travelClass: classType,
-      });
-
-      setLoading(false);
-
-      if (result.success && result.flights.length > 0) {
-        navigation.navigate('FlightResults', {
-          flights: result.flights,
-          searchParams: {
-            from: fromCity,
-            to: toCity,
-            departDate,
-            returnDate,
-            tripType,
-            travelers,
-            travelClass: classType,
-          },
-        });
-      } else if (result.success && result.flights.length === 0) {
-        Alert.alert(
-          'No Flights Found',
-          'No flights available for the selected route and dates. Try adjusting your filters.'
-        );
-      } else {
-        Alert.alert(
-          'Search Failed',
-          result.error || 'Unable to search flights. Please try again.'
-        );
-      }
-    } catch (error) {
-      setLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Flight search error:', error);
-    }
+      },
+      searchParams: {
+        from: fromCity,
+        to: toCity,
+        departDate,
+        returnDate,
+        tripType,
+        travelers,
+        travelClass: classType,
+      },
+    });
   };
 
   return (

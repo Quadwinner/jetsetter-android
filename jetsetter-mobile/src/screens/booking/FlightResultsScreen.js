@@ -8,9 +8,11 @@ import {
   Alert,
   Modal,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import flightService from '../../services/flightService';
+import { useFlightSearch } from '../../hooks/queries';
 import styles from './styles/FlightResultsScreen.styles';
 
 const priceOf = (f) => parseFloat(f?.price?.total || f?.price?.amount || 0) || 0;
@@ -40,7 +42,13 @@ const STOP_OPTIONS = [
 ];
 
 const FlightResultsScreen = ({ route, navigation }) => {
-  const { flights, searchParams } = route.params;
+  // New flow: search screen passes `apiParams` and this screen owns the query
+  // (cached, instant back-nav). Legacy fallback: `flights` passed directly.
+  const { searchParams, apiParams, flights: passedFlights } = route.params;
+  const flightQuery = useFlightSearch(apiParams, { enabled: !passedFlights && !!apiParams });
+  const flights = passedFlights ?? flightQuery.data?.flights ?? [];
+  const isLoading = !passedFlights && flightQuery.isLoading && flightQuery.isFetching;
+  const isError = !passedFlights && flightQuery.isError;
   const [sortBy, setSortBy] = useState('price'); // price, duration, departure
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState({
@@ -317,6 +325,24 @@ const FlightResultsScreen = ({ route, navigation }) => {
         ))}
       </View>
 
+      {isLoading ? (
+        <View style={styles.noResults}>
+          <ActivityIndicator size="large" color="#055B75" />
+          <Text style={[styles.noResultsText, { marginTop: 12 }]}>Searching flights…</Text>
+        </View>
+      ) : isError ? (
+        <View style={styles.noResults}>
+          <View style={styles.noResultsIcon}>
+            <Ionicons name="cloud-offline-outline" size={36} color="#055B75" />
+          </View>
+          <Text style={styles.noResultsTitle}>Couldn't load flights</Text>
+          <Text style={styles.noResultsText}>{flightQuery.error?.message || 'Please try again.'}</Text>
+          <TouchableOpacity style={fs.clearButton} onPress={() => flightQuery.refetch()}>
+            <Text style={fs.clearButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
       {/* Results Count */}
       <Text style={styles.resultsCount}>
         <Text style={styles.resultsCountBold}>{sortedFlights.length}</Text>
@@ -346,6 +372,8 @@ const FlightResultsScreen = ({ route, navigation }) => {
           {sortedFlights.map((flight, index) => renderFlightCard(flight, index))}
           <View style={styles.bottomPadding} />
         </ScrollView>
+      )}
+        </>
       )}
 
       {/* Filters bottom sheet */}

@@ -1,40 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
-  Image, 
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import cruiseService from '../../services/cruiseService';
+import { useCruiseSearch } from '../../hooks/queries';
 
 export default function CruiseResultsScreen({ route, navigation }) {
   const { cruises: initialCruises, searchParams } = route.params;
-  const [cruises, setCruises] = useState(initialCruises || []);
-  const [loading, setLoading] = useState(!initialCruises?.length);
-
-  useEffect(() => {
-    if (!initialCruises?.length) {
-      fetchCruises();
-    }
-  }, []);
-
-  const fetchCruises = async () => {
-    try {
-      const response = await cruiseService.searchCruises(searchParams || {});
-      if (response.success && response.cruises) {
-        setCruises(response.cruises);
-      }
-    } catch (error) {
-      console.error('Error fetching cruises:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch via TanStack Query unless results were passed in from the search screen.
+  const { data, isLoading } = useCruiseSearch(searchParams || {}, {
+    enabled: !initialCruises?.length,
+  });
+  const cruises = initialCruises?.length ? initialCruises : (data?.cruises || []);
+  const loading = !initialCruises?.length && isLoading;
 
   const renderCruiseCard = ({ item }) => (
     <TouchableOpacity 

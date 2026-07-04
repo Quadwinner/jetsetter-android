@@ -69,56 +69,20 @@ const CruiseSearchScreen = ({ navigation }) => {
     }
   };
 
-  const handleSearch = async () => {
-    console.log('🔍 Starting cruise search...');
-    console.log('Current state:', { destination, departurePort, cruiseLine, departureDate, duration, passengers, minPrice, maxPrice });
-
-    // Validation - Allow search with any criteria or no criteria (show all)
-    setLoading(true);
-
-    try {
-      const searchParams = {
-        destination: destination || undefined,
-        departurePort: departurePort || undefined,
-        cruiseLine: cruiseLine || undefined,
-        departureDate: departureDate || undefined,
-        duration: duration || undefined,
-        passengers,
-        minPrice: minPrice ? parseInt(minPrice) : undefined,
-        maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
-      };
-
-      console.log('🚢 Searching with params:', searchParams);
-      const result = await cruiseService.searchCruises(searchParams);
-      console.log('📊 Search result:', result);
-
-      setLoading(false);
-
-      if (result.success && result.cruises.length > 0) {
-        console.log('✅ Found cruises, navigating to results...');
-        // Navigate to results screen with cruise data
-        navigation.navigate('CruiseResults', {
-          cruises: result.cruises,
-          searchParams,
-        });
-      } else if (result.success && result.cruises.length === 0) {
-        console.log('❌ No cruises found');
-        Alert.alert(
-          'No Cruises Found',
-          'No cruises available for the selected criteria. Please try different search parameters.'
-        );
-      } else {
-        console.log('❌ Search failed:', result.error);
-        Alert.alert(
-          'Search Failed',
-          result.error || 'Unable to search cruises. Please try again.'
-        );
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error('💥 Cruise search error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-    }
+  const handleSearch = () => {
+    // The results screen owns the search via useCruiseSearch(searchParams) —
+    // it shows loading/empty and caches results for instant back-navigation.
+    const searchParams = {
+      destination: destination || undefined,
+      departurePort: departurePort || undefined,
+      cruiseLine: cruiseLine || undefined,
+      departureDate: departureDate || undefined,
+      duration: duration || undefined,
+      passengers,
+      minPrice: minPrice ? parseInt(minPrice) : undefined,
+      maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
+    };
+    navigation.navigate('CruiseResults', { searchParams });
   };
 
   const selectPopularDestination = (dest) => {

@@ -101,55 +101,24 @@ const HotelSearchScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const result = await hotelService.searchHotels({
+    // The results screen owns the search via useHotelSearch(apiParams) — it
+    // shows loading/empty/error and caches results for instant back-navigation.
+    const apiParams = {
+      cityCode: selectedCityCode,
+      checkInDate: searchCheckIn,
+      checkOutDate: searchCheckOut,
+      adults: searchGuests,
+    };
+    navigation.navigate('HotelResults', {
+      apiParams,
+      searchParams: {
+        destination: searchDestination,
         cityCode: selectedCityCode,
         checkInDate: searchCheckIn,
         checkOutDate: searchCheckOut,
         adults: searchGuests,
-      });
-
-      setLoading(false);
-
-      if (result.success && result.hotels.length > 0) {
-        console.log('🏨 Hotel search successful, navigating to results with:', {
-          hotels: result.hotels,
-          searchParams: {
-            destination: searchDestination,
-            cityCode: selectedCityCode,
-            checkInDate: searchCheckIn,
-            checkOutDate: searchCheckOut,
-            adults: searchGuests,
-          },
-        });
-        navigation.navigate('HotelResults', {
-          hotels: result.hotels,
-          searchParams: {
-            destination: searchDestination,
-            cityCode: selectedCityCode,
-            checkInDate: searchCheckIn,
-            checkOutDate: searchCheckOut,
-            adults: searchGuests,
-          },
-        });
-      } else if (result.success && result.hotels.length === 0) {
-        Alert.alert(
-          'No Hotels Found',
-          'No hotels available for the selected destination and dates. Please try different criteria.'
-        );
-      } else {
-        Alert.alert(
-          'Search Failed',
-          result.error || 'Unable to search hotels. Please try again.'
-        );
-      }
-    } catch (error) {
-      setLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Hotel search error:', error);
-    }
+      },
+    });
   };
 
   return (
