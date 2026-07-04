@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -195,43 +196,50 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   // Handle logout
-  const handleLogout = async () => {
+  // The actual sign-out. Kept separate so it can run from either the native
+  // Alert callback or the web confirm (RN Alert button callbacks don't fire on web).
+  const doLogout = async () => {
+    try {
+      await authService.signout();
+      dispatch(logoutAction());
+      await AsyncStorage.removeItem('userProfile');
+      setIsAuthenticated(false);
+      setProfileData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        gender: '',
+        dateOfBirth: '',
+      });
+      setIsEditing(false);
+      if (Platform.OS !== 'web') Alert.alert('Success', 'Logged out successfully!');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      if (Platform.OS === 'web') {
+        // eslint-disable-next-line no-alert
+        window.alert('Failed to logout. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to logout. Please try again.');
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      // RN Alert's multi-button callbacks don't fire on web; use window.confirm.
+      // eslint-disable-next-line no-alert
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to logout?')) {
+        doLogout();
+      }
+      return;
+    }
     Alert.alert(
       'Confirm Logout',
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Sign out from Firebase
-              await authService.signout();
-
-              // Dispatch logout action to Redux
-              dispatch(logoutAction());
-
-              // Clear local state
-              await AsyncStorage.removeItem('userProfile');
-              setIsAuthenticated(false);
-              setProfileData({
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                gender: '',
-                dateOfBirth: '',
-              });
-              setIsEditing(false);
-
-              Alert.alert('Success', 'Logged out successfully!');
-            } catch (error) {
-              console.error('Error logging out:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
+        { text: 'Logout', style: 'destructive', onPress: doLogout },
       ]
     );
   };
