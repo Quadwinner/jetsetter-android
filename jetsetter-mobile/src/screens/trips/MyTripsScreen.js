@@ -87,17 +87,36 @@ const MyTripsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [loadData]);
 
-  // Filter items
+  // Resolve a booking's travel date (mirrors the web My Trips logic).
+  const getTravelDate = (b) => {
+    if (b.type === 'flight') return b.departureDate || b.flight_departure_date || b.departure_date;
+    if (b.type === 'cruise') return b.cruiseDepartureDate || b.cruise_departure_date;
+    if (b.type === 'hotel') return b.checkinDate || b.checkIn || b.hotel_checkin_date;
+    if (b.type === 'package') return b.packageStartDate || b.package_start_date;
+    return b.departureDate || b.startDate || b.travelDate;
+  };
+
+  // A booking is "past" only if it has a travel date AND that date is before today.
+  // No travel date => treated as upcoming (same as the website).
+  const isTravelDatePast = (b) => {
+    const d = getTravelDate(b);
+    if (!d) return false;
+    const trip = new Date(d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    trip.setHours(0, 0, 0, 0);
+    return trip < today;
+  };
+
+  // Filter items — matches the web: Upcoming = not cancelled/failed & not past;
+  // Past = cancelled/failed OR travel date in the past (the app has no separate
+  // Cancelled tab, so cancelled/failed bookings surface under Past).
   const filterItems = (items, type) => {
-    const now = new Date();
     return items.filter((item) => {
-      if (type === 'Upcoming') {
-        const date = item.departure_date || item.start_date || item.flight_departure_date;
-        return date && new Date(date) >= now;
-      } else {
-        const date = item.departure_date || item.start_date || item.flight_departure_date;
-        return !date || new Date(date) < now;
-      }
+      const status = (item.status || '').toUpperCase();
+      const isCancelled = status === 'CANCELLED' || status === 'FAILED';
+      if (type === 'Upcoming') return !isCancelled && !isTravelDatePast(item);
+      return isCancelled || isTravelDatePast(item);
     });
   };
 
