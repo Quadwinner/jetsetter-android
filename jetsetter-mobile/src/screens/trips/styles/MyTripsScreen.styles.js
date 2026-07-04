@@ -326,12 +326,15 @@ export default StyleSheet.create({
   infoLabel: {
     fontSize: 14,
     color: '#6B7280',
-    flex: 1,
+    flexShrink: 0, // keep the label on one line (don't collapse to vertical text)
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
+    flex: 1, // fill the remaining width and right-align; long IDs shrink here
+    textAlign: 'right',
+    flexShrink: 1,
   },
 
   // Quick Actions

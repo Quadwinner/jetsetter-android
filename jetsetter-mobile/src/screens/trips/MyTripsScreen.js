@@ -357,7 +357,7 @@ const MyTripsScreen = ({ navigation }) => {
             <View style={styles.infoRow}>
               <Ionicons name="card-outline" size={16} color="#6B7280" />
               <Text style={styles.infoLabel}>Transaction</Text>
-              <Text style={styles.infoValue}>{booking.transactionId || booking.payment.transactionId}</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">{booking.transactionId || booking.payment.transactionId}</Text>
             </View>
           )}
         </View>
@@ -532,8 +532,8 @@ const MyTripsScreen = ({ navigation }) => {
               </Text>
             </View>
             {activeTab === 'Requests'
-              ? inquiries.map(renderInquiryCard)
-              : bookings.map(renderBookingCard)}
+              ? displayItems.map(renderInquiryCard)
+              : displayItems.map(renderBookingCard)}
           </>
         ) : (
           renderEmptyState()
