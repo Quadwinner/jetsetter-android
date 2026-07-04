@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePackageSearch } from '../../hooks/queries';
+import packageService from '../../services/packageService';
 
 const PackageListScreen = ({ navigation }) => {
   const { data, isLoading: loading } = usePackageSearch({});
