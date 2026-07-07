@@ -56,6 +56,11 @@ import FlightDetailsScreen from '../screens/booking/FlightDetailsScreen';
 import FlightCreateOrderScreen from '../screens/booking/FlightCreateOrderScreen';
 import FlightSuccessScreen from '../screens/booking/FlightSuccessScreen';
 import ManageBookingScreen from '../screens/booking/ManageBookingScreen';
+import VisaLandingScreen from '../screens/visa/VisaLandingScreen';
+import VisaApplyScreen from '../screens/visa/VisaApplyScreen';
+import VisaTrackScreen from '../screens/visa/VisaTrackScreen';
+import VisaSuccessScreen from '../screens/visa/VisaSuccessScreen';
+import VisaMyApplicationsScreen from '../screens/visa/VisaMyApplicationsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -112,6 +117,14 @@ const MainTabs = () => (
       options={{
         tabBarLabel: 'Packages',
         tabBarIcon: ({ color }) => <Ionicons name="gift" size={24} color={color} />,
+      }}
+    />
+    <Tab.Screen
+      name="VisaTab"
+      component={VisaLandingScreen}
+      options={{
+        tabBarLabel: 'Visa',
+        tabBarIcon: ({ color }) => <Ionicons name="document-text" size={24} color={color} />,
       }}
     />
     <Tab.Screen
@@ -177,6 +190,13 @@ const MainStack = () => (
       name="BookingDetail" 
       component={BookingDetailScreen} 
     />
+    {/* Visa */}
+    <Stack.Screen name="Visa" component={VisaLandingScreen} />
+    <Stack.Screen name="VisaApply" component={VisaApplyScreen} />
+    <Stack.Screen name="VisaTrack" component={VisaTrackScreen} />
+    <Stack.Screen name="VisaSuccess" component={VisaSuccessScreen} options={{ gestureEnabled: false }} />
+    <Stack.Screen name="VisaMyApplications" component={VisaMyApplicationsScreen} />
+
     {/* Requests & Inquiries */}
     <Stack.Screen name="NewRequest" component={NewRequestScreen} />
     <Stack.Screen name="Request" component={RequestScreen} />
