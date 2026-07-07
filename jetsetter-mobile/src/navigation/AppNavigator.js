@@ -61,6 +61,8 @@ import VisaApplyScreen from '../screens/visa/VisaApplyScreen';
 import VisaTrackScreen from '../screens/visa/VisaTrackScreen';
 import VisaSuccessScreen from '../screens/visa/VisaSuccessScreen';
 import VisaMyApplicationsScreen from '../screens/visa/VisaMyApplicationsScreen';
+import MembershipScreen from '../screens/membership/MembershipScreen';
+import RentalsLandingScreen from '../screens/rentals/RentalsLandingScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -190,6 +192,12 @@ const MainStack = () => (
       name="BookingDetail" 
       component={BookingDetailScreen} 
     />
+    {/* Membership */}
+    <Stack.Screen name="Membership" component={MembershipScreen} />
+
+    {/* Rentals */}
+    <Stack.Screen name="Rentals" component={RentalsLandingScreen} />
+
     {/* Visa */}
     <Stack.Screen name="Visa" component={VisaLandingScreen} />
     <Stack.Screen name="VisaApply" component={VisaApplyScreen} />

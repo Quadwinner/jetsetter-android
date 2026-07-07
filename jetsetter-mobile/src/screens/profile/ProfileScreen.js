@@ -590,6 +590,15 @@ const ProfileScreen = ({ navigation }) => {
 
           {renderCurrencyRow()}
 
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Membership')}>
+            <Ionicons name="diamond-outline" size={24} color="#F59E0B" style={styles.menuItemIcon} />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemTitle}>Premium Membership</Text>
+              <Text style={styles.menuItemSubtitle}>Unlock discounts & exclusive perks</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} style={styles.menuItemArrow} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="notifications-outline" size={24} color="#0ea5e9" style={styles.menuItemIcon} />
             <View style={styles.menuItemContent}>
