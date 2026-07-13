@@ -52,13 +52,14 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
-      // Google Sign-In plugin excluded on iOS until GoogleService-Info.plist is
-      // configured — the pod requires it at build time. Android works via google-services.json.
-      ...(isIOSBuild && !process.env.GOOGLE_SERVICES_INFOPLIST
-        ? []
-        : [['@react-native-google-signin/google-signin', {
-            iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || undefined,
-          }]]),
+      // Google Sign-In: on iOS, only include when GOOGLE_IOS_URL_SCHEME is set
+      // (requires GoogleService-Info.plist + the reversed client ID). On Android
+      // it always works via google-services.json with no extra options needed.
+      ...(isIOSBuild
+        ? (process.env.GOOGLE_IOS_URL_SCHEME
+            ? [['@react-native-google-signin/google-signin', { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME }]]
+            : [])
+        : ['@react-native-google-signin/google-signin']),
     ],
     extra: {
       eas: {
