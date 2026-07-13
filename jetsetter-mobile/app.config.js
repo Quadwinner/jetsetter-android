@@ -1,6 +1,23 @@
 require('dotenv').config();
 
+// Google Sign-In native module is intentionally excluded from iOS autolinking
+// (see package.json > expo.autolinking.ios.exclude). To keep the iOS CocoaPods
+// install consistent with that exclude, we only register the google-signin
+// config plugin for non-iOS builds. iOS Google Sign-In is not configured yet
+// (no GoogleService-Info.plist / iOS OAuth client), so this loses nothing on
+// iOS while unblocking `pod install`. Android + email/password are unaffected.
 const isIOSBuild = process.env.EAS_BUILD_PLATFORM === 'ios';
+
+const plugins = [];
+if (!isIOSBuild) {
+  plugins.push([
+    '@react-native-google-signin/google-signin',
+    {
+      iosUrlScheme:
+        process.env.GOOGLE_IOS_URL_SCHEME || 'com.googleusercontent.apps.placeholder',
+    },
+  ]);
+}
 
 module.exports = {
   expo: {
@@ -10,7 +27,7 @@ module.exports = {
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
-    newArchEnabled: false,
+    newArchEnabled: true,
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
@@ -51,16 +68,7 @@ module.exports = {
     web: {
       favicon: './assets/favicon.png',
     },
-    plugins: [
-      // Google Sign-In: on iOS, only include when GOOGLE_IOS_URL_SCHEME is set
-      // (requires GoogleService-Info.plist + the reversed client ID). On Android
-      // it always works via google-services.json with no extra options needed.
-      ...(isIOSBuild
-        ? (process.env.GOOGLE_IOS_URL_SCHEME
-            ? [['@react-native-google-signin/google-signin', { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME }]]
-            : [])
-        : ['@react-native-google-signin/google-signin']),
-    ],
+    plugins,
     extra: {
       eas: {
         projectId: 'ef6b16d3-6cf1-4174-9e38-73fda97b94a9',
