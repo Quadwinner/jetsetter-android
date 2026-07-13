@@ -41,6 +41,7 @@ module.exports = {
         ? { googleServicesFile: process.env.GOOGLE_SERVICES_INFOPLIST }
         : {}),
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: 'Jetsetters needs camera access to scan documents and take photos for visa applications.',
         NSPhotoLibraryUsageDescription: 'Jetsetters needs photo library access to upload documents and profile pictures.',
         NSLocationWhenInUseUsageDescription: 'Jetsetters uses your location to show nearby airports and local currency.',
