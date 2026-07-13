@@ -37,7 +37,6 @@
     "production": {
       "ios": {
         "appleId": "jetsetterscorp@gmail.com",
-        "ascAppId": "",
         "appleTeamId": "H8N52C5UCJ"
       }
     }
