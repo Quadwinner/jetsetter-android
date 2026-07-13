@@ -17,7 +17,16 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.jetsetterss.mobile',
-      googleServicesFile: process.env.GOOGLE_SERVICES_INFOPLIST,
+      buildNumber: '1',
+      ...(process.env.GOOGLE_SERVICES_INFOPLIST
+        ? { googleServicesFile: process.env.GOOGLE_SERVICES_INFOPLIST }
+        : {}),
+      infoPlist: {
+        NSCameraUsageDescription: 'Jetsetters needs camera access to scan documents and take photos for visa applications.',
+        NSPhotoLibraryUsageDescription: 'Jetsetters needs photo library access to upload documents and profile pictures.',
+        NSLocationWhenInUseUsageDescription: 'Jetsetters uses your location to show nearby airports and local currency.',
+        UIBackgroundModes: ['remote-notification'],
+      },
     },
     android: {
       adaptiveIcon: {
@@ -41,7 +50,7 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
-      '@react-native-google-signin/google-signin',
+      ['@react-native-google-signin/google-signin', { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || 'com.googleusercontent.apps.placeholder' }],
     ],
     extra: {
       eas: {
