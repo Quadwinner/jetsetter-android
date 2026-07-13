@@ -15,7 +15,20 @@
     "scheme": ["jetsetterss", "jetsettermobile"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jetsetterss.mobile"
+      "bundleIdentifier": "com.jetsetterss.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Jetsetters needs camera access to scan documents and take photos for visa applications.",
+        "NSPhotoLibraryUsageDescription": "Jetsetters needs photo library access to upload documents and profile pictures.",
+        "NSLocationWhenInUseUsageDescription": "Jetsetters uses your location to show nearby airports and local currency.",
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "associatedDomains": ["applinks:www.jetsetterss.com"],
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.PLACEHOLDER"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
