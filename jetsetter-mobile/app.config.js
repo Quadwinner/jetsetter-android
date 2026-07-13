@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const isIOSBuild = process.env.EAS_BUILD_PLATFORM === 'ios';
+
 module.exports = {
   expo: {
     name: 'Jetsetters',
@@ -50,7 +52,13 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
-      ['@react-native-google-signin/google-signin', { iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || 'com.googleusercontent.apps.placeholder' }],
+      // Google Sign-In plugin excluded on iOS until GoogleService-Info.plist is
+      // configured — the pod requires it at build time. Android works via google-services.json.
+      ...(isIOSBuild && !process.env.GOOGLE_SERVICES_INFOPLIST
+        ? []
+        : [['@react-native-google-signin/google-signin', {
+            iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME || undefined,
+          }]]),
     ],
     extra: {
       eas: {
