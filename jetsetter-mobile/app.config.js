@@ -75,6 +75,22 @@ module.exports = {
         'android.permission.ACCESS_NETWORK_STATE',
         'android.permission.POST_NOTIFICATIONS',
       ],
+      // Strip permissions injected by transitive config plugins that this app
+      // never uses. expo-location adds both location permissions even though no
+      // source file imports it; react-native-webview adds CAMERA/RECORD_AUDIO
+      // for getUserMedia, which the hosted-checkout page does not need.
+      // Declaring unused sensitive permissions contradicts the Play Data safety
+      // form and invites review questions.
+      blockedPermissions: [
+        'android.permission.ACCESS_FINE_LOCATION',
+        'android.permission.ACCESS_COARSE_LOCATION',
+        'android.permission.CAMERA',
+        'android.permission.RECORD_AUDIO',
+        'android.permission.SYSTEM_ALERT_WINDOW',
+        'android.permission.BLUETOOTH_CONNECT',
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+      ],
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON || './google-services.json',
     },
     web: {
