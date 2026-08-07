@@ -32,7 +32,7 @@ module.exports = {
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#1e40af',
+      backgroundColor: '#055B75',
     },
     ios: {
       supportsTablet: true,
@@ -52,7 +52,7 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#1e40af',
+        backgroundColor: '#055B75',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
