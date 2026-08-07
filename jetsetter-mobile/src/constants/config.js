@@ -19,26 +19,6 @@ export const SUPABASE_CONFIG = {
   ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbWFncXd1bWppcGRxdnhiaXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDEwMTIsImV4cCI6MjA2MDU3NzAxMn0.Ho8DYLWpX_vQ6syrI2zkU3G5pnNTdnYpgtpyjjGYlDA',
 };
 
-// Amadeus API Configuration
-export const AMADEUS_CONFIG = {
-  API_KEY: 'HSdhpX2AHnyj7LnL1TjDFL8MHj8lGz5G',
-  API_SECRET: 'bXf2ed12C4ruJ1Nt',
-  BASE_URL: 'https://api.amadeus.com',
-};
-
-// ARC Pay Configuration
-export const ARC_PAY_CONFIG = {
-  MERCHANT_ID: 'TESTARC05511704',
-  API_URL: 'https://api.arcpay.travel/api/rest/version/100/merchant/TESTARC05511704',
-  // Backend URL for payment processing (same as web platform)
-  BACKEND_PAYMENT_URL: 'https://www.jetsetterss.com/api/payments',
-  // Alternative backend for development
-  DEV_PAYMENT_URL: 'https://prod-six-phi.vercel.app/api/payments',
-  // Payment page URL (for reference - backend provides this)
-  PAYMENT_PAGE_BASE: 'https://na.gateway.mastercard.com/checkout/pay',
-  TEST_MODE: false,
-};
-
 // App Configuration
 export const APP_CONFIG = {
   NAME: 'Jetsetters',

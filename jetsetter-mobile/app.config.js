@@ -24,6 +24,7 @@ module.exports = {
     name: 'Jetsetters',
     slug: 'jetsetterss-mobile',
     version: '1.0.0',
+    scheme: ['jetsettermobile', 'jetsetterss'],
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -57,12 +58,22 @@ module.exports = {
       predictiveBackGestureEnabled: false,
       package: 'com.jetsetterss.mobile',
       versionCode: 1,
+      intentFilters: [
+        {
+          action: 'VIEW',
+          data: [{ scheme: 'jetsettermobile' }],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+        {
+          action: 'VIEW',
+          data: [{ scheme: 'jetsetterss' }],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
       permissions: [
         'android.permission.INTERNET',
         'android.permission.ACCESS_NETWORK_STATE',
-        'android.permission.CAMERA',
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.POST_NOTIFICATIONS',
       ],
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON || './google-services.json',
     },
@@ -76,11 +87,6 @@ module.exports = {
       },
       // Google Sign-In Configuration
       GOOGLE_WEB_CLIENT_ID: process.env.FIREBASE_WEB_CLIENT_ID,
-      // ARC Pay Configuration
-      ARC_PAY_MERCHANT_ID: process.env.ARC_PAY_MERCHANT_ID,
-      ARC_PAY_API_URL: process.env.ARC_PAY_API_URL,
-      ARC_PAY_API_USERNAME: process.env.ARC_PAY_API_USERNAME,
-      ARC_PAY_API_PASSWORD: process.env.ARC_PAY_API_PASSWORD,
       // Other config
       API_BASE_URL: process.env.API_BASE_URL,
       APP_ENV: process.env.APP_ENV,

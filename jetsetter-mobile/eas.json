@@ -28,8 +28,13 @@
       }
     },
     "production": {
+      "autoIncrement": true,
+      "env": {
+        "NODE_ENV": "production"
+      },
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
       },
       "ios": {
         "credentialsSource": "remote"
@@ -38,6 +43,11 @@
   },
   "submit": {
     "production": {
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
       "ios": {
         "appleId": "jetsetterscorp@gmail.com",
         "appleTeamId": "H8N52C5UCJ"

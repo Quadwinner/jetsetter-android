@@ -42,3 +42,9 @@ yarn-error.*
 
 # test directory
 test-app/
+
+# Play Store service account (contains private key - never commit)
+play-service-account.json
+
+# Local env files with secrets
+.env
