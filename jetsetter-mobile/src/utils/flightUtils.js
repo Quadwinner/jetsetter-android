@@ -38,11 +38,20 @@ export const getStopsBadge = (stops) => {
 
 /**
  * Build the fare breakdown exactly like the website's booking page:
- *   - Base Fare           = real Amadeus base (price.base) × passengers
- *   - Taxes & Surcharges  = (grandTotal − base) × passengers   (real airline taxes)
- *   - Service Fee         = (taxesFees + grandTotal × taxesFeesPercentage%) × passengers
+ *   - Base Fare           = real Amadeus base (price.base)
+ *   - Taxes & Surcharges  = grandTotal − base            (real airline taxes)
+ *   - Service Fee         = taxesFees + grandTotal × taxesFeesPercentage%
  *                           — the admin-configured "Jetsetters convenience fee"
  *   - Add-ons, Seats, Discount
+ *
+ * IMPORTANT: price.total and price.base already cover EVERY passenger. That is
+ * what the backend returns and what the website charges - a 2 adult + 1 child
+ * search comes back as one 286.70 total, not 98.00 per head. Multiplying by the
+ * passenger count here charged that family 863.10 instead of 287.70. Single
+ * passenger bookings made the two identical, which is why it went unnoticed.
+ *
+ * The service fee is likewise per booking, not per passenger, matching the
+ * website and the worked example in the admin panel.
  *
  * Fees are NOT hardcoded: pass `opts.config` from
  * flightService.getFlightPricingConfig() ({ taxesFees, taxesFeesPercentage }),
@@ -53,24 +62,21 @@ export const calculateFare = (flightOffer, passengerCount = 1, addons = [], coup
   const price = flightOffer?.price || {};
   const orig = flightOffer?.originalOffer?.price || {};
 
+  // Already the all-passenger amounts.
   const fareTotal = parseFloat(
     price.grandTotal || price.amount || price.total || orig.grandTotal || orig.total || 0
   );
   const amaBase = parseFloat(price.base || orig.base || 0);
-  const perPassengerBase = amaBase > 0 && amaBase <= fareTotal ? amaBase : fareTotal;
-  const perPassengerTax = Math.max(0, fareTotal - perPassengerBase);
+  const baseFare = amaBase > 0 && amaBase <= fareTotal ? amaBase : fareTotal;
+  const taxes = Math.max(0, fareTotal - baseFare);
 
   // Admin-configured platform service fee (from /admin/price-config/flights).
   const cfg = opts.config || {};
   const serviceFixed = Number(cfg.taxesFees) || 0;
   const servicePercent = Number(cfg.taxesFeesPercentage) || 0;
-  const perPassengerServiceFee = serviceFixed + (fareTotal * servicePercent) / 100;
+  const serviceFee = serviceFixed + (fareTotal * servicePercent) / 100;
 
   const count = Math.max(1, passengerCount);
-  const baseFare = perPassengerBase * count;
-  const taxes = perPassengerTax * count;
-  const serviceFee = perPassengerServiceFee * count;
-
   const addonsTotal = addons.reduce((sum, a) => sum + (a.price || 0), 0);
   const seatFee = Number(opts.seatFee) || 0;
   const discount = Number(couponDiscount) || 0;
@@ -79,7 +85,6 @@ export const calculateFare = (flightOffer, passengerCount = 1, addons = [], coup
 
   return {
     baseFare: baseFare.toFixed(2),
-    perPassengerBase: perPassengerBase.toFixed(2),
     taxes: taxes.toFixed(2),
     serviceFee: serviceFee.toFixed(2),
     addonsTotal: addonsTotal.toFixed(2),
