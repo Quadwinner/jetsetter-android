@@ -358,11 +358,13 @@ export default function FlightBookingScreen({ route, navigation }) {
         <LinearGradient colors={[THEME.primary, THEME.primaryDark]} style={s.fareGradient}>
           <Text style={s.fareTitle}>Fare Summary</Text>
 
-          {/* Base Fare — real airline base × passengers */}
+          {/* Base Fare — the airline base for the whole booking */}
           <View style={s.fareLine}>
             <View style={{ flex: 1 }}>
               <Text style={s.fareLabel}>Base Fare</Text>
-              <Text style={s.fareSub}>{count} × {currencyService.format(fare.perPassengerBase)}</Text>
+              {/* Not "N × x": passenger types are priced differently, so a
+                  per-head figure would be an average nobody actually pays. */}
+              <Text style={s.fareSub}>{count} passenger{count > 1 ? 's' : ''}</Text>
             </View>
             <Text style={s.fareVal}>{currencyService.format(fare.baseFare)}</Text>
           </View>
